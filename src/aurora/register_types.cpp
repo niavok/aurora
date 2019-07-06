@@ -1,8 +1,8 @@
 #include "register_types.h"
 #include "core/class_db.h"
 #include "aurora.h"
-#include "aurora_world.h"
-#include "aurora_world_renderer.h"
+#include "world/aurora_world.h"
+#include "render/aurora_world_renderer.h"
 
 void register_aurora_types() {
 

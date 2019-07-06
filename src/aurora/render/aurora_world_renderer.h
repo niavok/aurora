@@ -7,7 +7,8 @@
 namespace aurora {
 
 class AuroraWorld;
-class AuroraTile;
+class Tile;
+class Level;
 
 class AuroraWorldRenderer : public Node2D {
 	GDCLASS(AuroraWorldRenderer, Node2D);
@@ -36,7 +37,8 @@ public:
 private:
 
 	void DrawWorld(RID& ci);
-	void DrawTile(RID& ci, AuroraTile const* tile);
+    void DrawLevel(RID& ci, Level const* level);
+    void DrawTile(RID& ci, Tile const* tile);
 
 	NodePath m_targetWorldPath;
 	AuroraWorld const* m_targetWorld;

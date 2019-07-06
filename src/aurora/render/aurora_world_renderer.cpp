@@ -1,8 +1,9 @@
 #include "aurora_world_renderer.h"
 #include "scene/2d/sprite.h"
 
-#include "aurora_world.h"
-#include "aurora_tile.h"
+#include "../world/aurora_world.h"
+#include "../world/aurora_tile.h"
+#include "../world/aurora_level.h"
 
 namespace aurora {
 
@@ -155,11 +156,11 @@ Ref<Texture> AuroraWorldRenderer::get_texture2() const {
 
 static int drawTileCount;
 
-void AuroraWorldRenderer::DrawWorld(RID& ci)
+void AuroraWorldRenderer::DrawLevel(RID& ci, Level const* level)
 {
 	drawTileCount = 0;
 
-	for(AuroraTile const* tile : m_targetWorld->GetRootTiles())
+    for(Tile const* tile : level->GetRootTiles())
 	{
 		DrawTile(ci, tile);
 	}
@@ -169,13 +170,13 @@ void AuroraWorldRenderer::DrawWorld(RID& ci)
 
 
 
-void AuroraWorldRenderer::DrawTile(RID& ci, AuroraTile const* tile)
+void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 {
 	drawTileCount++;
 
 	if(tile->IsComposite())
 	{
-		for(AuroraTile const* child: tile->GetChildren())
+        for(Tile const* child: tile->GetChildren())
 		{
 			DrawTile(ci, child);
 		}
@@ -197,7 +198,7 @@ void AuroraWorldRenderer::DrawTile(RID& ci, AuroraTile const* tile)
 			texture = *m_testTexture2;
 		}
 
-		texture->draw_rect(ci, Rect2(tile->GetPosition() * 100, Size2(tile->GetSize() * 100,tile->GetSize() * 100)));
+        texture->draw_rect(ci, Rect2(tile->GetPosition().ToVector2() * 100, Vector2(tile->GetSize(), tile->GetSize()) * 100));
 
 
 		//virtual void draw_rect(RID p_canvas_item, const Rect2 &p_rect, bool p_tile = false, const Color &p_modulate = Color(1, 1, 1), bool p_transpose = false, const Ref<Texture> &p_normal_map = Ref<Texture>()) const;
@@ -211,10 +212,10 @@ void AuroraWorldRenderer::DrawTile(RID& ci, AuroraTile const* tile)
 
 Rect2 AuroraWorldRenderer::_edit_get_rect() const
 {
-	if (m_testTexture1.is_valid() && m_testTexture2.is_valid() && m_targetWorld != nullptr)
+    if (m_testTexture1.is_valid() && m_testTexture2.is_valid() && m_targetWorld != nullptr && m_targetWorld->GetLevels().size() > 0)
 	{
-		Rect2 meterRect = m_targetWorld->GetWorldArea();
-		return Rect2(meterRect.get_position() * 100, meterRect.get_size() * 100);
+        Level* firstLevel = m_targetWorld->GetLevels()[0];
+        return Rect2(Vector2(0, 0) , firstLevel->GetSize().ToVector2() * 100);
 	}
 	return Rect2(0, 0, 0, 0);
 }
