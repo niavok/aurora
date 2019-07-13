@@ -7,6 +7,7 @@
 
 namespace aurora {
 
+static Scalar MnToGodot = 1.f; // Mn in micrometer, Godot in Mm
 
 AuroraWorldRenderer::AuroraWorldRenderer()
 	: m_targetWorld(nullptr)
@@ -156,6 +157,15 @@ Ref<Texture> AuroraWorldRenderer::get_texture2() const {
 
 static int drawTileCount;
 
+void AuroraWorldRenderer::DrawWorld(RID& ci)
+{
+    for(Level* level : m_targetWorld->GetLevels())
+    {
+        DrawLevel(ci, level);
+    }
+
+}
+
 void AuroraWorldRenderer::DrawLevel(RID& ci, Level const* level)
 {
 	drawTileCount = 0;
@@ -183,8 +193,8 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 	}
 	else
 	{
-		//printf("DrawTile at %ls size %f\n", String(tile->GetPosition()).c_str(), tile->GetSize());
-		//m_testTexture->draw(ci,tile->GetPosition());
+        //printf("DrawTile at %ls size %f\n", String(tile->GetPosition()).c_str(), tile->GetSize());
+        //m_testTexture->draw(ci,tile->GetPosition());
 
 		Texture* texture;
 
@@ -198,7 +208,7 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 			texture = *m_testTexture2;
 		}
 
-        texture->draw_rect(ci, Rect2(tile->GetPosition().ToVector2() * 100, Vector2(tile->GetSize(), tile->GetSize()) * 100));
+        texture->draw_rect(ci, Rect2(tile->GetPosition().ToVector2() * MnToGodot, Vector2(tile->GetSize(), tile->GetSize()) * MnToGodot));
 
 
 		//virtual void draw_rect(RID p_canvas_item, const Rect2 &p_rect, bool p_tile = false, const Color &p_modulate = Color(1, 1, 1), bool p_transpose = false, const Ref<Texture> &p_normal_map = Ref<Texture>()) const;
@@ -215,7 +225,7 @@ Rect2 AuroraWorldRenderer::_edit_get_rect() const
     if (m_testTexture1.is_valid() && m_testTexture2.is_valid() && m_targetWorld != nullptr && m_targetWorld->GetLevels().size() > 0)
 	{
         Level* firstLevel = m_targetWorld->GetLevels()[0];
-        return Rect2(Vector2(0, 0) , firstLevel->GetSize().ToVector2() * 100);
+        return Rect2(Vector2(0, 0) , firstLevel->GetSize().ToVector2() * MnToGodot);
 	}
 	return Rect2(0, 0, 0, 0);
 }

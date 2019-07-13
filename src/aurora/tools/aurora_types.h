@@ -12,53 +12,56 @@ struct int2
 	int y;
 };
 
-typedef int64_t energy;
+typedef int64_t Energy;
 typedef int64_t Quantity;
 
-typedef int32_t Unit;
+typedef int32_t Mm; // Mm
+typedef int64_t Volume; // um2
 
-struct Unit2
+Volume MnSquareToVolume(Mm size);
+
+struct Mm2
 {
-    Unit2(Unit xy);
-    Unit2(Unit iX, Unit iY);
+    Mm2(Mm xy);
+    Mm2(Mm iX, Mm iY);
 
-    Unit x;
-    Unit y;
+    Mm x;
+    Mm y;
 
-    Unit2 operator+(Unit2 const& p_v) const;
-    Unit2 operator*(Unit v) const;
-    bool operator==(Unit2 const&p_v) const { return x== p_v.x && y == p_v.y; }
+    Mm2 operator+(Mm2 const& p_v) const;
+    Mm2 operator*(Mm v) const;
+    bool operator==(Mm2 const&p_v) const { return x== p_v.x && y == p_v.y; }
 
     Vector2 ToVector2() const;
 };
 
 
 
-struct UnitRect
+struct MmRect
 {
-    UnitRect();
-    UnitRect(Unit2 iPosition, Unit2 iSize);
-    UnitRect(Unit x, Unit y, Unit width, Unit height);
+    MmRect();
+    MmRect(Mm2 iPosition, Mm2 iSize);
+    MmRect(Mm x, Mm y, Mm width, Mm height);
 
-    UnitRect Clip(UnitRect const& p_rect) const;
-    bool Intersects(UnitRect const&p_rect) const;
+    MmRect Clip(MmRect const& p_rect) const;
+    bool Intersects(MmRect const&p_rect) const;
 
     inline bool IsEmpty() const {
         return (size.x <= 0 || size.y <= 0);
     }
 
-    bool operator==(UnitRect const&p_rect) const { return position== p_rect.position && size == p_rect.size; }
+    bool operator==(MmRect const&p_rect) const { return position== p_rect.position && size == p_rect.size; }
 
 
-    Unit2 position;
-    Unit2 size;
+    Mm2 position;
+    Mm2 size;
 };
 
 
 
-typedef float Scalar;
+typedef double Scalar;
 
-inline float sqr(Scalar x) { return x*x; }
+inline Scalar sqr(Scalar x) { return x*x; }
 
 }
 

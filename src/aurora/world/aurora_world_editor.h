@@ -2,42 +2,43 @@
 #define AURORA_WORLD_EDITOR_H
 
 #include "aurora_world.h"
+#include "aurora_tile.h"
 #include "../physics/aurora_physic_engine.h"
 
 namespace aurora {
 
-struct TileGazComposition
+struct TileGasComposition
 {
-   Quantity composition[GazMaterial::Count];
+   Quantity composition[Material::GasMoleculeCount];
    Scalar pressure;
    Scalar temperature;
 };
 
 struct TileLiquidVolume
 {
-    LiquidMaterial material;
-    Quantity quantity;
-    Quantity dissolvedQuantity;
+    Material material;
+    Scalar volumeProportion;
+    Scalar dissolvedProportion;
     Scalar temperature;
     Scalar pressure;
 };
 
 struct TileSolidVolume
 {
-    SolidMaterial material;
-    Quantity quantity;
+    Material material;
+    Quantity volumePart;
 };
 
 struct TileComposition
 {
-    TileGazComposition gaz;
+    TileGasComposition Gas;
     std::vector<TileLiquidVolume> liquids;
     Scalar porosity; // Quantity of volume not used by solid, if solid present
     std::vector<TileSolidVolume> solids;
     Scalar solidTemperature;
 
-    void AddLiquidVolume(LiquidMaterial material, Quantity quantity, Quantity dissolvedQuantity, Scalar temperature, Scalar pressure);
-    void AddSolidVolume(SolidMaterial material, Quantity quantity);
+    void AddLiquidVolume(Material material, Scalar volumeProportion, Scalar dissolvedProportion, Scalar temperature, Scalar pressure);
+    void AddSolidVolume(Material material, Volume volumePart);
 };
 
 
@@ -52,7 +53,10 @@ public:
 private:
     AuroraWorld& m_world;
 
-    void PaintTiles(Level* level, TileComposition const& composition, UnitRect area);
+    void PaintTiles(Level* level, TileComposition const& composition, MmRect area);
+    void PaintTile(Level* level, Tile* tile, TileComposition const& composition, MmRect area);
+    void SetTileComposition(Tile* tile, TileComposition composition);
+
     void Repack(Level* level);
 };
 

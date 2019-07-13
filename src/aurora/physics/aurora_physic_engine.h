@@ -9,8 +9,8 @@
 //class AuroraTile;
 
 namespace aurora {
-
-enum GazMaterial
+/*
+enum GasMaterial
 {
     Steam, // H2O
     Oxygen, // O2
@@ -43,41 +43,128 @@ enum SolidMaterial
     Coke,
     Gold,
     Clay
+};*/
 
+enum Material
+{
+    Oxygen, // O2
+    Nitrogen, // N2
+    Water,  // H2O
+    Methane,// CH4
+    CarbonDioxide, // CO2
+
+
+    //
+
+    // Liquid only
+
+    Salt, // NaCl
+    Iron, // Fe
+    Gold, // Au
+
+    // Solid only
+    Limestone, // CaCO3 -> Decay in CaO + CO2 at 800 C
+    Lime, // CaO, used to do concrete ?
+    Wood, // Decay at 400 C into 25% of Charcoal, 25% of Methane and 50 % of water
+    Charcoal, // C
+    Coal, // C + Sulfur, decay as coke at  1200C
+    Clay, // Al2O3 2SiO2 2H2O
+
+    MaterialCount,
+    GasMoleculeCount = Salt,
 };
 
-class GazNode
+class PhysicalConstants
 {
+public:
+    static Quantity GetSolidNByVolume(Material material, Volume volume);
+
+    static Volume GetSolidVolumeByN(Material material, Quantity N);
+
+    static Quantity EstimateLiquidNByVolume(Material material, Volume volume, Scalar pressure, Scalar temperature);
+
+    static Volume GetLiquidVolumeByN(Material material, Quantity N, Scalar pressure, Scalar temperature);
+
+    static Energy EstimateThermalEnergy(Material material, Quantity N, Scalar temperature);
+
+    static Quantity EstimateGasN(Volume volume, Scalar pressure, Scalar temperature);
+
+
+    static Material GetDissolvedMaterial(Material material);
+};
+
+class GasNode
+{
+public:
+    GasNode();
+
+    Volume GetVolume() const;
+    void SetVolume(Volume volume);
+
+    Quantity GetN(Material material) const;
+    Energy GetThermalEnergy() const;
+
+    void AddN(Material material, Quantity N);
+    void AddThermalEnergy(Energy thermalEnergy);
+
+
+
+    void TakeN(Material material, Quantity N);
+    void TakeThermalEnergy(Energy thermalEnergy);
+
+private:
     // Constants
-    Unit m_altitude;
-    Unit m_volume;
-    int8_t m_transitionCount;
+    Mm m_altitude;
+    Volume m_volume;
+    //int8_t m_transitionCount;
 
     // Variables
-    Quantity m_N; // TODO cache ?
-    Quantity m_nMaterials[GazMaterial::Count];
-    int64_t m_thermalEnergy;
+    //Quantity m_N; // TODO cache ?
+    Quantity m_nMaterials[Material::GasMoleculeCount];
+    Energy m_thermalEnergy;
 };
 
 class LiquidNode
 {
+public:
+    LiquidNode(Material material);
+
+    Volume GetVolume() const;
+    void SetVolume(Volume volume);
+
+    Material GetMaterial() const;
+    Quantity GetN() const;
+    Quantity GetDissolvedN() const;
+    Energy GetThermalEnergy() const;
+
+    void AddN(Quantity N);
+    void AddDissolvedN(Quantity N);
+    void AddThermalEnergy(Energy thermalEnergy);
+
+    void TakeN(Quantity N);
+    void TakeDissolvedN(Quantity N);
+    void TakeThermalEnergy(Energy thermalEnergy);
+
+private:
+
     // Constants
-    int32_t m_altitude;
-    LiquidMaterial m_material;
+    Material m_material;
+    Mm m_altitude;
 
     // Variables
-    int32_t m_volume;
-    int64_t m_N;
-    int64_t m_NDiluted;
+    Volume m_volume;
+    Quantity m_N;
+    Quantity m_dissolvedN;
+    Energy m_thermalEnergy;
 };
 
-class GazGazTransition
+class GasGasTransition
 {
-    GazGazTransition(GazNode& A, GazNode& B);
+    GasGasTransition(GasNode& A, GasNode& B);
 
     // Contants
-    GazNode& m_A;
-    GazNode& m_B;
+    GasNode& m_A;
+    GasNode& m_B;
     int32_t m_altitudeA;
     int32_t m_altitudeB;
     float m_frictionCoef;
@@ -101,34 +188,34 @@ class LiquidLiquidTransition
     int64_t m_kineticEnergy;
 };
 
-class GazLiquidTransition
+class GasLiquidTransition
 {
-    GazLiquidTransition(GazNode& A, LiquidNode& B);
+    GasLiquidTransition(GasNode& A, LiquidNode& B);
 
     // Contants
-    GazNode& m_A;
+    GasNode& m_A;
     LiquidNode& m_B;
-    Unit m_altitudeA;
-    Unit m_altitudeB;
+    Mm m_altitudeA;
+    Mm m_altitudeB;
     Scalar m_frictionCoef;
 
     // Variables
-    energy m_kineticEnergy;
+    Energy m_kineticEnergy;
 };
 
-class SharedVolumeGazLiquidTransition
+class SharedVolumeGasLiquidTransition
 {
-    SharedVolumeGazLiquidTransition(GazNode& A, LiquidNode& B);
+    SharedVolumeGasLiquidTransition(GasNode& A, LiquidNode& B);
 
     // Contants
-    GazNode& m_A;
+    GasNode& m_A;
     LiquidNode& m_B;
-    Unit m_altitudeA;
-    Unit m_altitudeB;
+    Mm m_altitudeA;
+    Mm m_altitudeB;
     Scalar m_frictionCoef;
 
     // Variables
-    energy m_kineticEnergy;
+    Energy m_kineticEnergy;
 };
 
 class PhysicEngine

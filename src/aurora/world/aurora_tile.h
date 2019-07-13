@@ -4,27 +4,15 @@
 #include "core/math/vector2.h"
 #include "core/math/rect2.h"
 #include "../tools/aurora_types.h"
+#include "../physics/aurora_physic_engine.h"
 #include <vector>
 
-//class AuroraTile;
 
 namespace aurora {
+class Level;
+
 /*
-enum Material
-{
-	Void,
-	Dirt,
-	Limestone, // CaCO3
-	Water, // H2O
-	Oxygen, // O2
-	Nitrogen, // N2
-	CarbonDioxide, // CO2
-	Methane,// CH4
-	Wood,
-	Charcoal,
-	Coal,
-	Coke,
-};
+
 
 
 
@@ -37,6 +25,15 @@ struct MaterialQuantity
 	scalar quality;
 };
 */
+
+struct SolidQuantity
+{
+    SolidQuantity(Material iMaterial, Quantity iN);
+
+    Material material;
+    Quantity N;
+};
+
 /*
 typedef std::vector<MaterialQuantity> MaterialComposition;
 
@@ -53,29 +50,31 @@ bool operator ==(const MaterialComposition &a, const MaterialComposition &b);
 
 //	void AddSolidMaterial(MaterialQuantity solidQuantity);
 //	void AddLiquidMaterial(MaterialQuantity liquidQuantity);
-//	void AddGazMaterial(MaterialQuantity gazQuantity);
+//	void AddGasMaterial(MaterialQuantity GasQuantity);
 
 //	void SetTemperature(scalar temperature);
 
 //	std::vector<MaterialQuantity> const& GetSolidComposition() const;
 //	std::vector<MaterialQuantity> const& GetLiquidComposition() const;
-//	std::vector<MaterialQuantity> const& GetGazComposition() const;
+//	std::vector<MaterialQuantity> const& GetGasComposition() const;
 
 //private:
 //	bool m_isPowder;
 //	std::vector<MaterialQuantity> m_solidComposition;
 //	std::vector<MaterialQuantity> m_liquidComposition;
-//	std::vector<MaterialQuantity> m_gazComposition;
+//	std::vector<MaterialQuantity> m_GasComposition;
 
 //	scalar m_solidHeat;
 //	scalar m_liquidHeat;
-//	scalar m_gazHeat;
+//	scalar m_GasHeat;
 //};
 
 
 class TileContent {
 public:
-    TileContent(Scalar volume);
+    TileContent(Volume volume);
+
+    ~TileContent();
 
 //	void SetSolidProperties(bool isPowder);
 
@@ -86,6 +85,15 @@ public:
 //    void SetMaterial(AuroraMaterial const& material);
 
     void SetContent(TileContent const& content);
+
+    void AddSolid(Material material, Quantity N, Energy thermalEnergy);
+
+    void AddLiquid(Material material, Quantity N, Quantity dissolvedN, Energy thermalEnergy);
+
+
+    void AddGas(Material material, Quantity N, Energy thermalEnergy);
+
+
 //    void ClearContent();
 
 //    AuroraTileContent Scaled(scalar ratio) const;
@@ -96,9 +104,9 @@ public:
 
 //    void AddSolidQuantity(MaterialQuantity solidQuantity);
 //    void AddLiquidQuantity(MaterialQuantity liquidQuantity);
-//    void AddGazQuantity(MaterialQuantity gazQuantity);
+//    void AddGasQuantity(MaterialQuantity GasQuantity);
 
-//    void AddGazComposition(MaterialComposition const& composition);
+//    void AddGasComposition(MaterialComposition const& composition);
 //    void AddLiquidComposition(MaterialComposition const& composition);
 //    void AddSolidComposition(MaterialComposition const& composition);
 
@@ -106,26 +114,58 @@ public:
 
     bool HasSolid() const;
 
+    bool HasLiquid() const;
+
+    bool HasGas() const;
+
+    Volume GetTotalVolume() const;
+
+    Volume GetGasVolume() const;
+
+    Volume GetLiquidsVolume() const;
+
+    Volume GetSolidsVolume() const;
+
 //    MaterialComposition& GetSolidComposition();
 //    MaterialComposition& GetLiquidComposition();
-//    MaterialComposition& GetGazComposition();
+//    MaterialComposition& GetGasComposition();
+
+    bool IsEmpty() const;
+
+    TileContent TakeProportion(int proportion);
+
 
 private:
-    Scalar m_volume;
+
+    TileContent(TileContent& content); // Not recommanded
+
+
+    Volume m_volume;
+    Volume m_solidVolume;
+
+    std::vector<SolidQuantity> m_solidComposition;
+    Energy m_solidThermalEnergy;
+
+    std::vector<LiquidNode*> m_liquidNodes;
+
+    GasNode m_gasNode;
+
+    void UpdateVolumes();
+
 //    scalar m_isPowder;
 
 //	MaterialComposition m_solidComposition;
 //	MaterialComposition m_liquidComposition;
-//	MaterialComposition m_gazComposition;
+//	MaterialComposition m_GasComposition;
 
 //	scalar solidHeat;
 //	scalar liquidHeat;
-//	scalar gazHeat;
+//	scalar GasHeat;
 };
 
 class Tile {
 public:
-    Tile(Unit size, Unit2 position);
+    Tile(Mm size, Mm2 position);
     ~Tile();
 
 	enum InsideMode	{
@@ -134,11 +174,11 @@ public:
 		Partially,
 	};
 
-    InsideMode IsInside(UnitRect area);
+    InsideMode IsInside(MmRect area);
 
     //void PaintTile(Rect2 area, AuroraMaterial const& material);
 
-    Unit GetVolume() const;
+    Volume GetVolume() const;
 
 //	/**
 //	 * @brief Make the tile composite if possible,
@@ -170,9 +210,9 @@ public:
 	 */
     void SetContent(TileContent const& content);
 
-    Unit2 GetPosition() const { return m_position; }
+    Mm2 GetPosition() const { return m_position; }
 
-    Unit GetSize() const { return m_size; }
+    Mm GetSize() const { return m_size; }
 
     std::vector<Tile*> const& GetChildren() const { return m_children; }
 
@@ -181,18 +221,20 @@ public:
     TileContent* GetContent() { return m_content; }
     TileContent const* GetContent() const { return m_content; }
 
+    bool Split(Level* level);
+
 private:
 
 
 
 
-    Unit m_size;
-    Unit2 m_position; // Optionnal ?
+    Mm m_size;
+    Mm2 m_position; // Optionnal ?
     std::vector<Tile*> m_children;
     TileContent* m_content;
 
 	// Cache
-    UnitRect m_worldArea;
+    MmRect m_worldArea;
 };
 
 }

@@ -9,13 +9,12 @@
 [node name="AuroraWorld" type="AuroraWorld" parent="."]
 
 [node name="AuroraWorldRenderer" type="AuroraWorldRenderer" parent="."]
-position = Vector2( 33990.7, 726.934 )
+position = Vector2( -11331.9, -287852 )
 world_node = NodePath("../AuroraWorld")
 texture1 = ExtResource( 1 )
 texture2 = ExtResource( 2 )
 
 [node name="test_player" type="Sprite" parent="."]
-position = Vector2( 239854, 34788.6 )
 scale = Vector2( 0.2, 0.2 )
 texture = ExtResource( 3 )
 __meta__ = {

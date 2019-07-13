@@ -1,12 +1,16 @@
+#include <cassert>
+
 #include "aurora_tile.h"
+#include "aurora_level.h"
 #include "aurora_world.h"
+
 
 namespace aurora {
 
-Tile::Tile(Unit size, Unit2 position)
+Tile::Tile(Mm size, Mm2 position)
 	: m_size(size)
 	, m_position(position)
-    , m_worldArea(position, Unit2(size, size)) {
+    , m_worldArea(position, Mm2(size, size)) {
 
     m_content = new TileContent(GetVolume()); // TODO optimized in case of tile that will be splitted
 	//printf("AuroraTile new AuroraTileContent %p\n", m_content);
@@ -25,51 +29,7 @@ Tile::~Tile()
 
 //void Tile::PaintTile(Rect2 area, AuroraMaterial const& material)
 //{
-//	//printf("PaintTile area=%ls tile_area=%ls\n", String(area).c_str(), String(m_worldArea).c_str());
-
-//	switch(IsInside(area))
-//	{
-//	case InsideMode::Yes:
-//	{
-//		//printf("inside: Yes\n");
-//		// All the tile is in the target area, put the material everywhere
-//		PaintContent(material);
-//	}
-//	break;
-//	case InsideMode::Partially:
-//	{
-//		//printf("inside: Partially\n");
-//		if(SplitTile())
-//		{
-//			//printf("split ok\n");
-//			for(AuroraTile* child: m_children)
-//			{
-//				//printf("split child\n");
-//				child->PaintTile(area, material);
-//			}
-//			//printf("split done\n");
-//		}
-//		else
-//		{
-//			//printf("split ko\n");
-//			// Cannot split more, already at min size, merge
-//			Rect2 intersection = m_worldArea.clip(area);
-
-//            Scalar volume = GetVolume();
-//            Scalar mergeRatio = intersection.get_area() / volume;
-
-//            Scalar newVolume = volume * mergeRatio;
-
-//			m_content->RemoveMaterial(newVolume);
-//			m_content->AddMaterial(material, newVolume);
-//		}
-//	}
-//	break;
-//	case InsideMode::No:
-//		//printf("inside: No\n");
-//	default:
-//	break;
-//	}
+//
 //}
 
 //void AuroraTile::Repack()
@@ -113,7 +73,7 @@ Tile::~Tile()
 
 //            for(AuroraTile* child: m_children)
 //			{
-//                mergedContent.AddGazComposition(child->GetContent()->GetGazComposition());
+//                mergedContent.AddGasComposition(child->GetContent()->GetGasComposition());
 //                mergedContent.AddLiquidComposition(child->GetContent()->GetLiquidComposition());
 //                mergedContent.AddSolidComposition(child->GetContent()->GetSolidComposition());
 //				// TODO merge heat
@@ -127,9 +87,9 @@ Tile::~Tile()
 
 //}
 
-Unit Tile::GetVolume() const
+Volume Tile::GetVolume() const
 {
-    return m_size * m_size;
+    return MnSquareToVolume(m_size);
 }
 
 bool Tile::IsComposite() const
@@ -167,53 +127,9 @@ void Tile::SetContent(TileContent const& content)
 	m_content->SetContent(content);
 }
 
-//bool Tile::SplitTile()
-//{
-//	if(IsComposite())
-//	{
-//		//printf("Split tile : alreaydy composite\n");
-//		// Already composite
-//		return true;
-//	}
-//	else if(m_size <= AuroraWorld::MinTileSize)
-//	{
-//		//printf("Split tile : too small %f\n", m_size);
-//		// Too small, cannot split
-//		return false;
-//	}
-//	else
-//	{
-
-//        Scalar childrenSize = m_size / AuroraWorld::TileChildEdgeCount;
-
-//		//printf("do split childrenSize=%f\n", childrenSize);
-
-//		AuroraTileContent childContent = m_content->Scaled(1 / AuroraWorld::TileChildCount);
-//		for(int y = 0; y < AuroraWorld::TileChildEdgeCount; y++)
-//		{
-//			for(int x = 0; x < AuroraWorld::TileChildEdgeCount; x++)
-//			{
-//				Vector2 position = m_position + Vector2(x * childrenSize, y * childrenSize);
-
-//				AuroraTile* newTile = new AuroraTile(childrenSize, position);
-//				m_children.emplace_back(newTile);
-//				newTile->SetContent(childContent);
-
-//				//printf("newTile pos=%ls\n", String(newTile->GetPosition()).c_str());
-
-//			}
-//		}
-
-//		delete m_content;
-//		m_content = nullptr;
-
-//		return true;
-//	}
-//}
-
-Tile::InsideMode Tile::IsInside(UnitRect area)
+Tile::InsideMode Tile::IsInside(MmRect area)
 {
-    UnitRect intersection = area.Clip(m_worldArea);
+    MmRect intersection = area.Clip(m_worldArea);
 
     if(intersection.IsEmpty())
 	{
@@ -227,6 +143,57 @@ Tile::InsideMode Tile::IsInside(UnitRect area)
 	{
 		return Partially;
 	}
+}
+
+bool Tile::Split(Level* level)
+{
+    if(IsComposite())
+    {
+        //printf("Split tile : alreaydy composite\n");
+        // Already composite
+        return true;
+    }
+    else if(m_size <= level->GetMinTileSize())
+    {
+        //printf("Split tile : too small %f\n", m_size);
+        // Too small, cannot split
+        return false;
+    }
+    else
+    {
+        Mm childrenSize = m_size / Level::TileChildEdgeCount;
+
+        //printf("do split childrenSize=%f\n", childrenSize);
+
+        //TileContent childContent = m_content->Scaled(1 / AuroraWorld::TileChildCount);
+
+        int proportionToTake = 4;
+
+        for(int y = 0; y < Level::TileChildEdgeCount; y++)
+        {
+            for(int x = 0; x < Level::TileChildEdgeCount; x++)
+            {
+                Mm2 position = m_position + Mm2(x * childrenSize, y * childrenSize);
+
+                Tile* newTile = new Tile(childrenSize, position);
+                m_children.emplace_back(newTile);
+
+                TileContent&& childContent = m_content->TakeProportion(proportionToTake);
+                newTile->SetContent(childContent);
+
+                //printf("newTile pos=%ls\n", String(newTile->GetPosition()).c_str());
+
+                proportionToTake--;
+            }
+        }
+
+        assert(m_content->IsEmpty());
+
+        delete m_content;
+        m_content = nullptr;
+
+        return true;
+    }
 }
 
 
@@ -279,9 +246,9 @@ Tile::InsideMode Tile::IsInside(UnitRect area)
 //{
 //	AddInComposition(liquidQuantity, m_liquidComposition);
 //}
-//void AuroraMaterial::AddGazMaterial(MaterialQuantity gazQuantity)
+//void AuroraMaterial::AddGasMaterial(MaterialQuantity GasQuantity)
 //{
-//	AddInComposition(gazQuantity, m_gazComposition);
+//	AddInComposition(GasQuantity, m_GasComposition);
 //}
 
 //void AuroraMaterial::SetTemperature(Scalar temperature)
@@ -299,14 +266,322 @@ Tile::InsideMode Tile::IsInside(UnitRect area)
 //	return m_liquidComposition;
 //}
 
-//std::vector<MaterialQuantity> const& AuroraMaterial::GetGazComposition() const
+//std::vector<MaterialQuantity> const& AuroraMaterial::GetGasComposition() const
 //{
-//	return m_gazComposition;
+//	return m_GasComposition;
 //}
 
 //////////////////////////
 ///// AuroraTileContent
 //////////////////////////
+
+TileContent::TileContent(Volume volume)
+    : m_volume(volume)
+{
+
+}
+
+TileContent::~TileContent()
+{
+    for (LiquidNode* liquidNode : m_liquidNodes)
+    {
+        delete liquidNode;
+    }
+}
+
+
+void TileContent::AddSolid(Material material, Quantity N, Energy thermalEnergy)
+{
+    bool materialFound = false;
+
+    for(SolidQuantity& quantity : m_solidComposition)
+    {
+        if(quantity.material == material)
+        {
+            quantity.N =  N;
+            materialFound = true;
+        }
+    }
+
+    if(!materialFound)
+    {
+        SolidQuantity newQuantity(material, N);
+        m_solidComposition.push_back(newQuantity);
+    }
+
+    m_solidThermalEnergy += thermalEnergy;
+
+    UpdateVolumes();
+}
+
+void TileContent::AddLiquid(Material material, Quantity N, Quantity dissolvedN, Energy thermalEnergy)
+{
+    LiquidNode* nodeToUse = nullptr;
+
+    std::vector<LiquidNode*> m_liquidNodes;
+    for(LiquidNode* node : m_liquidNodes)
+    {
+        if(node->GetMaterial() == material)
+        {
+            nodeToUse = node;
+            break;
+        }
+    }
+
+    if(nodeToUse == nullptr)
+    {
+        nodeToUse = new LiquidNode(material);
+        m_liquidNodes.push_back(nodeToUse);
+    }
+
+    nodeToUse->AddN(N);
+    nodeToUse->AddDissolvedN(dissolvedN);
+    nodeToUse->AddThermalEnergy(thermalEnergy);
+
+    UpdateVolumes();
+}
+
+void TileContent::AddGas(Material material, Quantity N, Energy thermalEnergy)
+{
+    m_gasNode.AddN(material, N);
+    m_gasNode.AddThermalEnergy(thermalEnergy);
+}
+
+void TileContent::UpdateVolumes()
+{
+    // Solid volume
+    Volume maxSolidVolume = m_volume;
+
+    if(HasGas())
+    {
+        maxSolidVolume--;
+    }
+
+    if(HasLiquid())
+    {
+        maxSolidVolume--;
+    }
+
+    Volume needSolidVolume = 0;
+
+    for(SolidQuantity& quantity : m_solidComposition)
+    {
+        Volume needVolume = PhysicalConstants::GetSolidVolumeByN(quantity.material, quantity.N);
+        needSolidVolume += needVolume;
+    }
+
+    if(needSolidVolume > maxSolidVolume)
+    {
+        assert(false);
+        needSolidVolume = maxSolidVolume;
+    }
+
+    m_solidVolume = needSolidVolume;
+
+    // Liquid volume
+    Volume maxLiquidVolume = m_volume - m_solidVolume;
+
+    if(HasGas())
+    {
+        maxLiquidVolume--;
+    }
+
+    Volume needLiquidVolume = 0;
+
+    for(LiquidNode* liquidNode: m_liquidNodes)
+    {
+        needLiquidVolume += liquidNode->GetVolume();
+    }
+
+    if(needLiquidVolume > maxLiquidVolume)
+    {
+        assert(false);
+        Volume volumeToGain = maxSolidVolume - needLiquidVolume;
+        for(LiquidNode* liquidNode: m_liquidNodes)
+        {
+            Volume volumeToTake = MIN(liquidNode->GetVolume() - 1, volumeToGain);
+
+            liquidNode->SetVolume(liquidNode->GetVolume() - volumeToTake);
+            volumeToGain -= volumeToTake;
+            if(volumeToGain == 0)
+            {
+                break;
+            }
+        }
+
+        assert(volumeToGain == 0);
+    }
+
+    m_gasNode.SetVolume(GetGasVolume());
+}
+
+Volume TileContent::GetGasVolume() const
+{
+    return MAX(0, m_volume - m_solidVolume - GetLiquidsVolume());
+}
+
+
+Volume TileContent::GetTotalVolume() const
+{
+    return m_volume;
+}
+
+Volume TileContent::GetSolidsVolume() const
+{
+    return m_solidVolume;
+}
+
+Volume TileContent::GetLiquidsVolume() const
+{
+    Volume volume = 0;
+
+    for(LiquidNode* liquidNode: m_liquidNodes)
+    {
+        volume += liquidNode->GetVolume();
+    }
+
+    return volume;
+}
+
+
+bool TileContent::HasSolid() const
+{
+    return m_solidComposition.size() > 0;
+}
+
+bool TileContent::HasGas() const
+{
+    for (int GasIndex = 0; GasIndex < Material::GasMoleculeCount; GasIndex++)
+    {
+        if(m_gasNode.GetN(Material(GasIndex)) > 0)
+        {
+                return true;
+        }
+    }
+
+    return false;
+}
+
+
+bool TileContent::HasLiquid() const
+{
+    return m_liquidNodes.size() > 0;
+}
+
+bool TileContent::IsEmpty() const
+{
+    return !HasGas() && !HasLiquid() && !HasSolid();
+}
+
+
+
+void TileContent::SetContent(TileContent const& content)
+{
+    m_volume = content.m_volume;
+    m_solidVolume = content.m_solidVolume;
+    m_solidComposition = content.m_solidComposition;
+    m_solidThermalEnergy = content.m_solidThermalEnergy;
+    m_gasNode = content.m_gasNode;
+
+    for(LiquidNode* liquidNode: content.m_liquidNodes)
+    {
+        m_liquidNodes.push_back(new LiquidNode(*liquidNode));
+    }
+}
+
+TileContent TileContent::TakeProportion(int proportion)
+{
+    TileContent tileProportion(m_volume / proportion);
+
+    // Take solid
+    std::vector<Material> solidsToRemove;
+    for (SolidQuantity& solid : m_solidComposition)
+    {
+        Quantity quantityToTake = solid.N/proportion;
+
+        tileProportion.m_solidComposition.push_back(SolidQuantity(solid.material, quantityToTake));
+        solid.N -= quantityToTake;
+
+        if(solid.N == 0)
+        {
+            solidsToRemove.push_back(solid.material);
+        }
+    }
+
+    Energy solidThermalEnergyToTake = m_solidThermalEnergy / proportion;
+    tileProportion.m_solidThermalEnergy = solidThermalEnergyToTake;
+    m_solidThermalEnergy -= solidThermalEnergyToTake;
+
+    // Take liquid
+    std::vector<LiquidNode*> liquidsToRemove;
+    for (LiquidNode* liquid : m_liquidNodes)
+    {
+        Quantity quantityToTake = liquid->GetN()/proportion;
+        Quantity dissolvedQuantityToTake = liquid->GetDissolvedN()/proportion;
+        Energy thermalEnergyToTake = liquid->GetThermalEnergy() / proportion;
+
+        tileProportion.AddLiquid(liquid->GetMaterial(), quantityToTake, dissolvedQuantityToTake, thermalEnergyToTake);
+        liquid->TakeN(quantityToTake);
+        liquid->TakeDissolvedN(quantityToTake);
+        liquid->TakeThermalEnergy(thermalEnergyToTake);
+
+        if(liquid->GetN() == 0 && liquid->GetDissolvedN() == 0)
+        {
+            liquidsToRemove.push_back(liquid);
+        }
+    }
+
+    // Take gas
+    for (int GasIndex = 0; GasIndex < Material::GasMoleculeCount; GasIndex++)
+    {
+        Quantity quantityToTake = m_gasNode.GetN(Material(GasIndex)) / proportion;
+        tileProportion.m_gasNode.AddN(Material(GasIndex), quantityToTake);
+    }
+
+    Energy thermalEnergyToTake = m_gasNode.GetThermalEnergy() / proportion;
+    tileProportion.m_gasNode.AddThermalEnergy(thermalEnergyToTake);
+
+    // Clean
+    for (Material material : solidsToRemove)
+    {
+        int index = 0;
+        for (SolidQuantity& solid : m_solidComposition)
+        {
+            if(solid.material == material)
+            {
+                break;
+            }
+            index++;
+        }
+
+        m_solidComposition.erase(m_solidComposition.begin() + index);
+    }
+
+    for (LiquidNode* liquidToRemove : liquidsToRemove)
+    {
+        int index = 0;
+        for (LiquidNode* liquid : m_liquidNodes)
+        {
+            if(liquid == liquidToRemove)
+            {
+                break;
+            }
+            index++;
+        }
+
+        m_liquidNodes.erase(m_liquidNodes.begin() + index);
+        delete liquidToRemove;
+    }
+
+
+    tileProportion.UpdateVolumes();
+
+    return tileProportion;
+}
+
+
+
+
 
 
 //AuroraTileContent::AuroraTileContent(Scalar volume)
@@ -326,16 +601,13 @@ Tile::InsideMode Tile::IsInside(UnitRect area)
 //	AddMaterial(material, m_volume);
 //}
 
-//void AuroraTileContent::SetContent(AuroraTileContent const& content)
-//{
-//	*this = content;
-//}
+
 
 //void AuroraTileContent::ClearContent()
 //{
 //	m_solidComposition.clear();
 //	m_liquidComposition.clear();
-//	m_gazComposition.clear();
+//	m_GasComposition.clear();
 //}
 
 //static void ScaleComposition(std::vector<MaterialQuantity>& composition, Scalar scaleRatio)
@@ -367,10 +639,10 @@ Tile::InsideMode Tile::IsInside(UnitRect area)
 //		AddInComposition(quantity, m_liquidComposition);
 //	}
 
-//	for(MaterialQuantity quantity : material.GetGazComposition())
+//	for(MaterialQuantity quantity : material.GetGasComposition())
 //	{
 //		quantity.quantity *= volume;
-//		AddInComposition(quantity, m_gazComposition);
+//		AddInComposition(quantity, m_GasComposition);
 //	}
 //}
 
@@ -379,7 +651,7 @@ Tile::InsideMode Tile::IsInside(UnitRect area)
 //	m_volume *= ratio;
 //	ScaleComposition(m_solidComposition, ratio);
 //	ScaleComposition(m_liquidComposition, ratio);
-//	ScaleComposition(m_gazComposition, ratio);
+//	ScaleComposition(m_GasComposition, ratio);
 //}
 
 //void AuroraTileContent::RemoveMaterial(Scalar volume)
@@ -397,9 +669,9 @@ Tile::InsideMode Tile::IsInside(UnitRect area)
 //{
 //	AddInComposition(liquidQuantity, m_liquidComposition);
 //}
-//void AuroraTileContent::AddGazQuantity(MaterialQuantity gazQuantity)
+//void AuroraTileContent::AddGasQuantity(MaterialQuantity GasQuantity)
 //{
-//	AddInComposition(gazQuantity, m_gazComposition);
+//	AddInComposition(GasQuantity, m_GasComposition);
 //}
 
 //void AuroraTileContent::SetTemperature(Scalar temperature)
@@ -422,10 +694,17 @@ Tile::InsideMode Tile::IsInside(UnitRect area)
 //	return m_liquidComposition;
 //}
 
-//MaterialComposition& AuroraTileContent::GetGazComposition()
+//MaterialComposition& AuroraTileContent::GetGasComposition()
 //{
-//	return m_gazComposition;
+//	return m_GasComposition;
 //}
+
+SolidQuantity::SolidQuantity(Material iMaterial, Quantity iN)
+    : material(iMaterial)
+    , N(iN)
+{
+
+}
 
 
 

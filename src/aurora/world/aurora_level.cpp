@@ -1,10 +1,38 @@
+#include<stdio.h>
 #include "aurora_level.h"
+
 
 namespace aurora {
 
+int const Level::TileChildEdgeCount = 2; // 2 or modify 1<<maxTileSubdivision
+int const Level::TileChildCount = Level::TileChildEdgeCount * Level::TileChildEdgeCount;
+
+
+Level::Level(Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount)
+    : m_minTileSize(minTileSize)
+    , m_maxTileSize(minTileSize * (1<<maxTileSubdivision))
+    , m_size(Mm2(rootTileHCount, rootTileVCount) * m_maxTileSize)
+
+{
+    size_t worldRootTileCount = size_t(rootTileHCount *  rootTileVCount);
+    m_rootTiles.reserve(worldRootTileCount);
+
+    for(int x = 0; x < rootTileHCount; x++)
+    {
+        for(int y = 0; y < rootTileVCount; y++)
+        {
+            Tile* tile = new Tile(m_maxTileSize, Mm2(x * m_maxTileSize, y * m_maxTileSize));
+            m_rootTiles.emplace_back(tile);
+        }
+    }
+
+    printf("new Level: %lu tiles created\n", m_rootTiles.size());
+}
+
+
 
 //scalar const AuroraWorld::MinTileSize = 0.0625;
-//scalar const AuroraWorld::TileChildEdgeCount = 2;
+
 //scalar const AuroraWorld::TileChildCount = AuroraWorld::TileChildEdgeCount * AuroraWorld::TileChildEdgeCount;
 
 //AuroraWorld::~AuroraWorld()

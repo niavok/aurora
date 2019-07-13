@@ -1,12 +1,8 @@
 #include "aurora_world.h"
 #include "aurora_world_editor.h"
+#include "aurora_level.h"
 
 namespace aurora {
-
-
-//scalar const AuroraWorld::MinTileSize = 0.0625;
-//scalar const AuroraWorld::TileChildEdgeCount = 2;
-//scalar const AuroraWorld::TileChildCount = AuroraWorld::TileChildEdgeCount * AuroraWorld::TileChildEdgeCount;
 
 AuroraWorld::AuroraWorld() {
     //count = 0;
@@ -17,53 +13,24 @@ AuroraWorld::AuroraWorld() {
 
 AuroraWorld::~AuroraWorld()
 {
-//	for(AuroraTile* tile : m_rootTiles)
-//	{
-//		delete tile;
-//	}
+    for(Level* level : m_levels)
+    {
+        delete level;
+    }
 }
-
-//void AuroraWorld::add(int value) {
-
-//    count += value;
-//}
-
-//void AuroraWorld::reset() {
-
-//    count = 0;
-//}
-
-//int AuroraWorld::get_total() const {
-
-//    return count;
-//}
 
 void AuroraWorld::_bind_methods() {
-
-    //ClassDB::bind_method(D_METHOD("add", "value"), &AuroraWorld::add);
-    //ClassDB::bind_method(D_METHOD("reset"), &AuroraWorld::reset);
-    //ClassDB::bind_method(D_METHOD("get_total"), &AuroraWorld::get_total);
 }
 
 
-Level* AuroraWorld::CreateLevel(Unit minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount)
+Level* AuroraWorld::CreateLevel(Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount)
 {
-    // TODO
-    return nullptr;
+    Level* level = new Level(minTileSize, maxTileSubdivision, rootTileHCount, rootTileVCount);
+    m_levels.push_back(level);
+
+    return level;
 }
 
-//void AuroraWorld::Generate()
-//{
-
-//}
-
-//void AuroraWorld::PaintTile(Rect2 area, AuroraMaterial const& material)
-//{
-//	for(AuroraTile* tile : m_rootTiles)
-//	{
-//		tile->PaintTile(area, material);
-//	}
-//}
 
 //void AuroraWorld::Repack()
 //{
