@@ -19,7 +19,7 @@ WorldEditor::~WorldEditor()
 void WorldEditor::GenerateTestWord()
 {
 
-    Level* surfaceLevel = m_world.CreateLevel(50, 12, 20, 5); // 20 x 5 blocks = 4096 m x 1024 m
+    Level* surfaceLevel = m_world.CreateLevel(50, 12, 5, 2); // 20 x 5 blocks = 4096 m x 1024 m
 
     //cave1 = m_world.CreateLevel(64, 1,1); // 1 x 1 block = 64 m x 64 m
 
