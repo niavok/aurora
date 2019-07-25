@@ -97,6 +97,7 @@ class GasNode
 {
 public:
     GasNode();
+    GasNode(GasNode& node);
 
     Volume GetVolume() const;
     void SetVolume(Volume volume);
@@ -111,6 +112,11 @@ public:
 
     void TakeN(Material material, Quantity N);
     void TakeThermalEnergy(Energy thermalEnergy);
+
+    Scalar ComputePressure() const;
+    Scalar ComputeTemperature() const;
+    Quantity ComputeN() const;
+    void ComputeNPT(Quantity& N, Scalar& pressure, Scalar& temperature) const;
 
 private:
     // Constants

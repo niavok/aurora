@@ -202,6 +202,17 @@ GasNode::GasNode()
     }
 }
 
+GasNode::GasNode(GasNode& node)
+    : m_altitude(node.m_altitude)
+    , m_volume(node.m_volume)
+    , m_thermalEnergy(node.m_thermalEnergy)
+{
+    for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+    {
+        m_nMaterials[gazIndex] = node.m_nMaterials[gazIndex];
+    }
+}
+
 void GasNode::SetVolume(Volume volume)
 {
     m_volume = volume;
@@ -242,6 +253,52 @@ Energy GasNode::GetThermalEnergy() const
 {
     return m_thermalEnergy;
 }
+
+Scalar GasNode::ComputePressure() const
+{
+    Quantity N;
+    Scalar temperature;
+    Scalar pressure;
+    ComputeNPT(N, pressure, temperature);
+    return pressure;
+}
+
+
+Scalar GasNode::ComputeTemperature() const
+{
+    Energy energyPerK = 0;
+
+    for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+    {
+        energyPerK += specifHeat[gazIndex] * m_nMaterials[gazIndex];
+    }
+
+    if(energyPerK == 0)
+    {
+        return 0;
+    }
+
+    Scalar temperature = m_thermalEnergy / energyPerK;
+    return temperature;
+}
+
+Quantity GasNode::ComputeN() const
+{
+    Quantity N = 0;
+    for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+    {
+        N += m_nMaterials[gazIndex];
+    }
+    return N;
+}
+
+void GasNode::ComputeNPT(Quantity& N, Scalar& pressure, Scalar& temperature) const
+{
+    N = ComputeN();
+    temperature = ComputeTemperature();
+    pressure = N * GasConstant * temperature / m_volume;
+}
+
 
 ////////////////////////
 /// LiquidNode

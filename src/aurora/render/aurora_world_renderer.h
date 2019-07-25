@@ -2,6 +2,7 @@
 #define AURORA_WORLD_RENDERER_H
 
 #include "scene/2d/node_2d.h"
+#include "scene/gui/control.h"
 
 
 namespace aurora {
@@ -44,7 +45,8 @@ private:
 	AuroraWorld const* m_targetWorld;
 	Ref<Texture> m_testTexture1;
 	Ref<Texture> m_testTexture2;
-
+    Control *m_control;
+    Ref<Font> m_debugFont;
 };
 
 }

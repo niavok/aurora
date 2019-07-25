@@ -9,9 +9,11 @@ namespace aurora {
 
 struct TileGasComposition
 {
-   Quantity composition[Material::GasMoleculeCount];
-   Scalar pressure;
-   Scalar temperature;
+    TileGasComposition();
+
+    Quantity composition[Material::GasMoleculeCount];
+    Scalar pressure;
+    Scalar temperature;
 };
 
 struct TileLiquidVolume
@@ -49,6 +51,7 @@ public:
     virtual ~WorldEditor();
 
     void GenerateTestWord();
+    void GenerateHelloWord();
 
 private:
     AuroraWorld& m_world;

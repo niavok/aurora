@@ -345,6 +345,8 @@ void TileContent::AddGas(Material material, Quantity N, Energy thermalEnergy)
 {
     m_gasNode.AddN(material, N);
     m_gasNode.AddThermalEnergy(thermalEnergy);
+
+    UpdateVolumes();
 }
 
 void TileContent::UpdateVolumes()

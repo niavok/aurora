@@ -134,6 +134,8 @@ public:
 
     TileContent TakeProportion(int proportion);
 
+    GasNode& GetGazNode() { return m_gasNode; }
+    GasNode const& GetGazNode() const { return m_gasNode; }
 
 private:
 

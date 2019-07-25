@@ -8,7 +8,7 @@ AuroraWorld::AuroraWorld() {
     //count = 0;
     printf("plop1\n");
     WorldEditor worldEditor(*this);
-    worldEditor.GenerateTestWord();
+    worldEditor.GenerateHelloWord();
 }
 
 AuroraWorld::~AuroraWorld()

@@ -1,23 +1,29 @@
 #include "aurora_world_renderer.h"
 #include "scene/2d/sprite.h"
 
+
 #include "../world/aurora_world.h"
 #include "../world/aurora_tile.h"
 #include "../world/aurora_level.h"
 
+#include <string>
+
 namespace aurora {
 
-static Scalar MnToGodot = 1.f; // Mn in micrometer, Godot in Mm
+static Scalar MnToGodot = 1.; // Mn in micrometer, Godot in Mm
 
 AuroraWorldRenderer::AuroraWorldRenderer()
 	: m_targetWorld(nullptr)
 {
-
+    m_control = memnew(Control);
+    m_debugFont = m_control->get_font("mono_font", "Fonts");
 }
 
 
 AuroraWorldRenderer::~AuroraWorldRenderer()
 {
+    memdelete(m_control);
+
 	if (m_testTexture1.is_valid())
 		m_testTexture1->remove_change_receptor(this);
 
@@ -67,11 +73,15 @@ void AuroraWorldRenderer::_notification(int p_what) {
 	switch (p_what) {
 
 		case NOTIFICATION_INTERNAL_PROCESS: {
-
+            printf("NOTIFICATION_INTERNAL_PROCESS\n");
+            update();
+            //_change_notify("frame");
+            //emit_signal(SceneStringNames::get_singleton()->frame_changed);
 		} break;
 		case NOTIFICATION_TRANSFORM_CHANGED: {
 		} break;
 		case NOTIFICATION_ENTER_TREE: {
+            set_process_internal(true);
 		} break;
 		case NOTIFICATION_DRAW: {
 			printf("NOTIFICATION_DRAW\n");
@@ -208,7 +218,27 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 			texture = *m_testTexture2;
 		}
 
-        texture->draw_rect(ci, Rect2(tile->GetPosition().ToVector2() * MnToGodot, Vector2(tile->GetSize(), tile->GetSize()) * MnToGodot));
+        Vector2 pos = tile->GetPosition().ToVector2() * MnToGodot;
+
+        texture->draw_rect(ci, Rect2(pos, Vector2(tile->GetSize(), tile->GetSize()) * MnToGodot));
+
+        Color color(0.2f,0.2f,0.2f);
+
+
+        GasNode const& gas = tile->GetContent()->GetGazNode();
+
+        Quantity N;
+        Scalar pressure;
+        Scalar temperature;
+
+        gas.ComputeNPT(N, pressure, temperature);
+
+
+        if(pos.x < 1000 && pos.y < 1000)
+        {
+            m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(pressure), color);
+            m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
+        }
 
 
 		//virtual void draw_rect(RID p_canvas_item, const Rect2 &p_rect, bool p_tile = false, const Color &p_modulate = Color(1, 1, 1), bool p_transpose = false, const Ref<Texture> &p_normal_map = Ref<Texture>()) const;

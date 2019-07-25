@@ -16,6 +16,32 @@ WorldEditor::~WorldEditor()
 {
 }
 
+void WorldEditor::GenerateHelloWord()
+{
+    //Level* surfaceLevel = m_world.CreateLevel(50, 8, 1, 1); // 1 x 1 blocks * 50 mm * 2^ 8 = 12.8 m x 12.8 m
+    Level* surfaceLevel = m_world.CreateLevel(50, 0, 256, 256); // 256 x 256 blocks * 50 mm * 2^ 1 = 12.8 m x 12.8 m
+
+
+    TileComposition dryAir;
+    // No solid
+    // No liquid
+    // Nitrogen 80%, Oxygen 20%
+    // Temperature 125K
+    // Pressure 1 bar
+    dryAir.Gas.composition[Material::Nitrogen] = 80;
+    dryAir.Gas.composition[Material::Oxygen] = 20;
+    dryAir.Gas.pressure = 1.;
+    dryAir.Gas.temperature = 125.;
+
+
+
+    int surfaceWidth = surfaceLevel->GetSize().x;
+    int surfaceHeight = surfaceLevel->GetSize().y;
+    PaintTiles(surfaceLevel, dryAir,  MmRect(0,0, surfaceWidth,surfaceHeight));
+
+}
+
+
 void WorldEditor::GenerateTestWord()
 {
 
@@ -206,6 +232,11 @@ void WorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
 
         for (int GasIndex = 0; GasIndex < Material::GasMoleculeCount; GasIndex++)
         {
+            if(GasPartSum <= 0)
+            {
+                break;
+            }
+
             Scalar proportion = Scalar(composition.Gas.composition[GasIndex]) / Scalar(GasPartSum);
             Volume GasN= Volume(totalN * proportion);
 
@@ -237,6 +268,14 @@ void TileComposition::AddSolidVolume(Material material, Volume volumePart)
     volume.material = material;
     volume.volumePart = volumePart;
     solids.push_back(volume);
+}
+
+TileGasComposition::TileGasComposition()
+{
+    for(int i = 0; i < Material::GasMoleculeCount; i++)
+    {
+        composition[i] = 0;
+    }
 }
 
 
