@@ -30,13 +30,24 @@ void WorldEditor::GenerateHelloWord()
     // Pressure 1 bar
     dryAir.Gas.composition[Material::Nitrogen] = 80;
     dryAir.Gas.composition[Material::Oxygen] = 20;
-    dryAir.Gas.pressure = 1.;
-    dryAir.Gas.temperature = 125.;
+    dryAir.Gas.pressure = 100000.; // 1 bar
+    dryAir.Gas.temperature = 100.; // 0 degree C
+
+    TileComposition steam;
+    // No solid
+    // No liquid
+    // Nitrogen 80%, Oxygen 20%
+    // Temperature 125K
+    // Pressure 1 bar
+    steam.Gas.composition[Material::Water] = 100;
+    steam.Gas.pressure = 100000.; // 1 bar
+    steam.Gas.temperature = 100.; // 0 degree C
 
 
 
     int surfaceWidth = surfaceLevel->GetSize().x;
     int surfaceHeight = surfaceLevel->GetSize().y;
+    //PaintTiles(surfaceLevel, dryAir,  MmRect(0,0, surfaceWidth,surfaceHeight));
     PaintTiles(surfaceLevel, dryAir,  MmRect(0,0, surfaceWidth,surfaceHeight));
 
 }
@@ -249,6 +260,7 @@ void WorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
         }
     }
     tile->SetContent(newContent);
+    tile->GetContent()->GetGazNode().ComputeCache();
 }
 
 void TileComposition::AddLiquidVolume(Material material, Scalar volumeProportion, Scalar dissolvedProportion, Scalar temperature, Scalar pressure)

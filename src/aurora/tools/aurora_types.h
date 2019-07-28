@@ -6,6 +6,10 @@
 
 namespace aurora {
 
+
+typedef double Scalar;
+
+
 struct int2
 {
 	int x;
@@ -16,7 +20,7 @@ typedef int64_t Energy;
 typedef int64_t Quantity;
 
 typedef int32_t Mm; // Mm
-typedef int64_t Volume; // um2
+typedef Scalar Volume; // m2
 
 Volume MnSquareToVolume(Mm size);
 
@@ -58,8 +62,6 @@ struct MmRect
 };
 
 
-
-typedef double Scalar;
 
 inline Scalar sqr(Scalar x) { return x*x; }
 

@@ -1,11 +1,16 @@
 #include "aurora_physic_engine.h"
 
+#include <assert.h>
+
 namespace aurora {
 
-static Quantity solidNByVolume[Material::MaterialCount] =
+static const Scalar gravity = 10; // m.s-2
+
+static Quantity solidNByVolume[Material::MaterialCount] = // TODO
 {
-    10, // Oxygen
+    10, // Hydrogen
     10, // Nitrogen
+    10, // Oxygen
     10, // Water
     10, // Methane
     10, // CarbonDioxide
@@ -20,11 +25,11 @@ static Quantity solidNByVolume[Material::MaterialCount] =
     10  // Clay
 };
 
-static Quantity liquidNByVolume[Material::MaterialCount] =
+static Quantity liquidNByVolume[Material::MaterialCount] = // TODO
 {
-    10, // Oxygen
+    10, // Hydrogen
     10, // Nitrogen
-    10, // Water
+    10, // Oxygen
     10, // Methane
     10, // CarbonDioxide
     10, // Salt
@@ -38,10 +43,11 @@ static Quantity liquidNByVolume[Material::MaterialCount] =
     10  // Clay
 };
 
-static Scalar liquidThermalExpansionCoef[Material::MaterialCount] =
+static Scalar liquidThermalExpansionCoef[Material::MaterialCount] = // TODO
 {
-    0.01, // Oxygen
+    0.01, // Hydrogen
     0.01, // Nitrogen
+    0.01, // Oxygen
     0.01, // Water
     0.01, // Methane
     0.01, // CarbonDioxide
@@ -58,8 +64,9 @@ static Scalar liquidThermalExpansionCoef[Material::MaterialCount] =
 
 static Scalar liquidCompressibilityCoef[Material::MaterialCount] =
 {
-    100., // Oxygen
+    100., // Hydrogen
     100., // Nitrogen
+    100., // Oxygen
     100., // Water
     100., // Methane
     100., // CarbonDioxide
@@ -76,8 +83,9 @@ static Scalar liquidCompressibilityCoef[Material::MaterialCount] =
 
 static Energy specifHeat[Material::MaterialCount] = // Joules.N-1.K-1
 {
-    1000, // Oxygen
+    1000, // Hydrogen
     1000, // Nitrogen
+    1000, // Oxygen
     4000, // Water
     1000, // Methane
     1000, // CarbonDioxide
@@ -94,8 +102,9 @@ static Energy specifHeat[Material::MaterialCount] = // Joules.N-1.K-1
 
 static Material dissolvedMaterial[Material::MaterialCount] = // Joules.N-1.K-1
 {
-    CarbonDioxide, // Oxygen
+    CarbonDioxide, // Hydrogen
     CarbonDioxide, // Nitrogen
+    CarbonDioxide, // Oxygen
     CarbonDioxide, // Water
     CarbonDioxide, // Methane
     CarbonDioxide, // CarbonDioxide
@@ -111,7 +120,30 @@ static Material dissolvedMaterial[Material::MaterialCount] = // Joules.N-1.K-1
 };
 
 
+static Scalar massByN[Material::MaterialCount] =
+{
+    0.11e-8, // Hydrogen
+    1.55e-8, // Nitrogen
+    1.77e-8, // Oxygen
+    1.00e-8, // Water
+    0.88e-8, // Methane
+    2.44e-8, // CarbonDioxide
+    10, // Salt // TODO
+    10, // Iron
+    10, // Gold
+    10, // Limestone
+    10, // Lime
+    10, // Wood
+    10, // Charcoal
+    10, // Coal
+    10  // Clay
+};
+
+
 static Scalar GasConstant = 1e-5;
+
+//static Scalar SizeToSI = 1e-3;
+//static Scalar VolumeToSI = SizeToSI * SizeToSI;
 
 ////////////////////////
 /// PhysicalConstants
@@ -206,6 +238,7 @@ GasNode::GasNode(GasNode& node)
     : m_altitude(node.m_altitude)
     , m_volume(node.m_volume)
     , m_thermalEnergy(node.m_thermalEnergy)
+    , m_cacheComputed(false)
 {
     for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
     {
@@ -216,6 +249,7 @@ GasNode::GasNode(GasNode& node)
 void GasNode::SetVolume(Volume volume)
 {
     m_volume = volume;
+    m_cacheComputed = false;
 }
 
 
@@ -227,21 +261,25 @@ Volume GasNode::GetVolume() const
 void GasNode::AddN(Material material, Quantity N)
 {
     m_nMaterials[material] += N;
+    m_cacheComputed = false;
 }
 
 void GasNode::AddThermalEnergy(Energy thermalEnergy)
 {
     m_thermalEnergy += thermalEnergy;
+    m_cacheComputed = false;
 }
 
 void GasNode::TakeN(Material material, Quantity N)
 {
     m_nMaterials[material] -= N;
+    m_cacheComputed = false;
 }
 
 void GasNode::TakeThermalEnergy(Energy thermalEnergy)
 {
     m_thermalEnergy -= thermalEnergy;
+    m_cacheComputed = false;
 }
 
 Quantity GasNode::GetN(Material material) const
@@ -254,50 +292,67 @@ Energy GasNode::GetThermalEnergy() const
     return m_thermalEnergy;
 }
 
-Scalar GasNode::ComputePressure() const
+void GasNode::ComputeCache()
 {
-    Quantity N;
-    Scalar temperature;
-    Scalar pressure;
-    ComputeNPT(N, pressure, temperature);
-    return pressure;
-}
-
-
-Scalar GasNode::ComputeTemperature() const
-{
+    // Compute N, energy and mass
+    m_cacheN = 0;
+    m_cacheMass = 0;
     Energy energyPerK = 0;
-
     for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
     {
-        energyPerK += specifHeat[gazIndex] * m_nMaterials[gazIndex];
+        Quantity materialN = m_nMaterials[gazIndex];
+
+        m_cacheN += materialN;
+        energyPerK += specifHeat[gazIndex] * materialN;
+
+        m_cacheMass += massByN[gazIndex] * materialN;
     }
 
+    // Compute temperature
     if(energyPerK == 0)
     {
-        return 0;
+        m_cacheTemperature = 0;
     }
-
-    Scalar temperature = m_thermalEnergy / energyPerK;
-    return temperature;
-}
-
-Quantity GasNode::ComputeN() const
-{
-    Quantity N = 0;
-    for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+    else
     {
-        N += m_nMaterials[gazIndex];
+        m_cacheTemperature = m_thermalEnergy / energyPerK;
     }
-    return N;
+
+    // Compute pressure
+    m_cachePressure = m_cacheN * GasConstant * m_cacheTemperature / m_volume;
+
+    Scalar density = Scalar(m_cacheMass) / m_volume;
+    m_cachePressureGradient = density * gravity;
+
+    m_cacheComputed = true;
 }
 
-void GasNode::ComputeNPT(Quantity& N, Scalar& pressure, Scalar& temperature) const
+
+
+Scalar GasNode::GetPressure() const
 {
-    N = ComputeN();
-    temperature = ComputeTemperature();
-    pressure = N * GasConstant * temperature / m_volume;
+    assert(m_cacheComputed);
+    return m_cachePressure;
 }
+
+Scalar GasNode::GetTemperature() const
+{
+    assert(m_cacheComputed);
+    return m_cacheTemperature;
+}
+
+Quantity GasNode::GetN() const
+{
+    assert(m_cacheComputed);
+    return m_cacheN;
+}
+
+Scalar GasNode::GetPressureGradient() const
+{
+    assert(m_cacheComputed);
+    return m_cachePressureGradient;
+}
+
 
 
 ////////////////////////

@@ -356,12 +356,12 @@ void TileContent::UpdateVolumes()
 
     if(HasGas())
     {
-        maxSolidVolume--;
+        maxSolidVolume-=1e-9;
     }
 
     if(HasLiquid())
     {
-        maxSolidVolume--;
+        maxSolidVolume-=1e-9;
     }
 
     Volume needSolidVolume = 0;
@@ -385,7 +385,7 @@ void TileContent::UpdateVolumes()
 
     if(HasGas())
     {
-        maxLiquidVolume--;
+        maxLiquidVolume-= 1e-9;
     }
 
     Volume needLiquidVolume = 0;
@@ -401,17 +401,17 @@ void TileContent::UpdateVolumes()
         Volume volumeToGain = maxSolidVolume - needLiquidVolume;
         for(LiquidNode* liquidNode: m_liquidNodes)
         {
-            Volume volumeToTake = MIN(liquidNode->GetVolume() - 1, volumeToGain);
+            Volume volumeToTake = MIN(liquidNode->GetVolume() - 1e-9, volumeToGain);
 
             liquidNode->SetVolume(liquidNode->GetVolume() - volumeToTake);
             volumeToGain -= volumeToTake;
-            if(volumeToGain == 0)
+            if(volumeToGain <= 0)
             {
                 break;
             }
         }
 
-        assert(volumeToGain == 0);
+        assert(volumeToGain <= 0);
     }
 
     m_gasNode.SetVolume(GetGasVolume());

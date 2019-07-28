@@ -73,7 +73,7 @@ void AuroraWorldRenderer::_notification(int p_what) {
 	switch (p_what) {
 
 		case NOTIFICATION_INTERNAL_PROCESS: {
-            printf("NOTIFICATION_INTERNAL_PROCESS\n");
+            //printf("NOTIFICATION_INTERNAL_PROCESS\n");
             update();
             //_change_notify("frame");
             //emit_signal(SceneStringNames::get_singleton()->frame_changed);
@@ -84,7 +84,7 @@ void AuroraWorldRenderer::_notification(int p_what) {
             set_process_internal(true);
 		} break;
 		case NOTIFICATION_DRAW: {
-			printf("NOTIFICATION_DRAW\n");
+            //printf("NOTIFICATION_DRAW\n");
 			if (m_testTexture1.is_null())
 				return;
 			if (m_testTexture2.is_null())
@@ -219,26 +219,62 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 		}
 
         Vector2 pos = tile->GetPosition().ToVector2() * MnToGodot;
+        real_t size = tile->GetSize() * MnToGodot;
 
-        texture->draw_rect(ci, Rect2(pos, Vector2(tile->GetSize(), tile->GetSize()) * MnToGodot));
-
-        Color color(0.2f,0.2f,0.2f);
+        texture->draw_rect(ci, Rect2(pos, Vector2(size, size)));
 
 
-        GasNode const& gas = tile->GetContent()->GetGazNode();
 
-        Quantity N;
-        Scalar pressure;
-        Scalar temperature;
 
-        gas.ComputeNPT(N, pressure, temperature);
+
+
 
 
         if(pos.x < 1000 && pos.y < 1000)
         {
+            Color color(0.2f,0.2f,0.2f);
+            GasNode const& gas = tile->GetContent()->GetGazNode();
+
+            Scalar pressure = gas.GetPressure();
+            Scalar temperature = gas.GetTemperature();
+
+            //gas.ComputeNPT(N, pressure, temperature);
+            Scalar bottomPressure = pressure + gas.GetPressureGradient() * tile->GetSize();
+
+            float temperatureColor = float(temperature / 300.);
+            float pressureColor = float((pressure-100000) * 1e-5);
+            float bottomPressureColor = float((bottomPressure-100000) * 1e-3);
+
+
             m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(pressure), color);
             m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
+
+            Vector<Vector2> points;
+            points.push_back(pos);
+            points.push_back(pos + Vector2(size, 0));
+            points.push_back(pos + Vector2(size, size));
+            points.push_back(pos + Vector2(0, size));
+
+
+
+            Color topColor(temperatureColor, 0, pressureColor);
+            Color bottomColor(temperatureColor, 0, bottomPressureColor);
+
+            Vector<Color> colors;
+
+
+            colors.push_back(topColor);
+            colors.push_back(topColor);
+            colors.push_back(bottomColor);
+            colors.push_back(bottomColor);
+            //colors.push_back(Color(0, 0, 1, 0.5));
+
+
+            draw_polygon(points, colors);
         }
+
+
+
 
 
 		//virtual void draw_rect(RID p_canvas_item, const Rect2 &p_rect, bool p_tile = false, const Color &p_modulate = Color(1, 1, 1), bool p_transpose = false, const Ref<Texture> &p_normal_map = Ref<Texture>()) const;

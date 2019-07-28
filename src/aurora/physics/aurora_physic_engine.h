@@ -47,8 +47,9 @@ enum SolidMaterial
 
 enum Material
 {
-    Oxygen, // O2
+    Hydrogen, //H2
     Nitrogen, // N2
+    Oxygen, // O2
     Water,  // H2O
     Methane,// CH4
     CarbonDioxide, // CO2
@@ -113,12 +114,21 @@ public:
     void TakeN(Material material, Quantity N);
     void TakeThermalEnergy(Energy thermalEnergy);
 
-    Scalar ComputePressure() const;
-    Scalar ComputeTemperature() const;
-    Quantity ComputeN() const;
-    void ComputeNPT(Quantity& N, Scalar& pressure, Scalar& temperature) const;
+    Scalar GetPressure() const;
+    Scalar GetTemperature() const;
+    Quantity GetN() const;
+    Scalar GetPressureGradient() const;
+
+    //Scalar ComputePressure() const;
+    //Scalar ComputeTemperature() const;
+    //Quantity ComputeN() const;
+    //void ComputeNPT(Quantity& N, Scalar& pressure, Scalar& temperature) const;
+
+    void ComputeCache();
 
 private:
+
+
     // Constants
     Mm m_altitude;
     Volume m_volume;
@@ -128,6 +138,16 @@ private:
     //Quantity m_N; // TODO cache ?
     Quantity m_nMaterials[Material::GasMoleculeCount];
     Energy m_thermalEnergy;
+
+    // Cache
+    bool m_cacheComputed;
+    Quantity m_cacheN;
+    Scalar m_cacheMass;
+    Scalar m_cachePressure;
+    Scalar m_cachePressureGradient;
+    Scalar m_cacheTemperature;
+
+
 };
 
 class LiquidNode

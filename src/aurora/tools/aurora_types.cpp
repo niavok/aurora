@@ -4,7 +4,7 @@
 namespace aurora {
 
 Volume MnSquareToVolume(Mm size) {
-    return Volume(size) * Volume(size) * 1000000;
+    return Volume(size) * Volume(size) * 1e-6;
 }
 
 Mm2::Mm2(Mm iX, Mm iY)
