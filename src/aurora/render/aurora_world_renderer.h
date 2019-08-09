@@ -12,7 +12,7 @@ class Tile;
 class Level;
 
 class AuroraWorldRenderer : public Node2D {
-    GDCLASS(AuroraWorldRenderer, Node2D)
+     GDCLASS(AuroraWorldRenderer, Node2D)
 
 protected:
     static void _bind_methods();

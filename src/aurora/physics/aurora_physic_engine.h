@@ -78,7 +78,7 @@ enum Material
 class PhysicalConstants
 {
 public:
-    static Quantity GetSolidNByVolume(Material material, Volume volume);
+    static Quantity EstimateSolidNByVolume(Material material, Volume volume);
 
     static Volume GetSolidVolumeByN(Material material, Quantity N);
 
@@ -94,7 +94,18 @@ public:
     static Material GetDissolvedMaterial(Material material);
 };
 
-class GasNode
+class FluidNode
+{
+public:
+
+    virtual ~FluidNode();
+
+    virtual void ComputeCache() = 0;
+    virtual void PrepareTransitions() = 0;
+    virtual void ApplyTransitions() = 0;
+};
+
+class GasNode : public FluidNode
 {
 public:
     GasNode();
@@ -119,11 +130,14 @@ public:
     Quantity GetN() const;
     Scalar GetPressureGradient() const;
 
+
     //Scalar ComputePressure() const;
     //Scalar ComputeTemperature() const;
     //Quantity ComputeN() const;
     //void ComputeNPT(Quantity& N, Scalar& pressure, Scalar& temperature) const;
 
+    void PrepareTransitions();
+    void ApplyTransitions();
     void ComputeCache();
 
 private:
@@ -184,22 +198,82 @@ private:
     Energy m_thermalEnergy;
 };
 
-class GasGasTransition
+class Transition
 {
-    GasGasTransition(GasNode& A, GasNode& B);
+public:
+    enum Direction {
+        DIRECTION_UP,
+        DIRECTION_RIGHT,
+        DIRECTION_DOWN,
+        DIRECTION_LEFT,
+    };
 
-    // Contants
-    GasNode& m_A;
-    GasNode& m_B;
-    int32_t m_altitudeA;
-    int32_t m_altitudeB;
-    float m_frictionCoef;
+    Transition(Direction direction) : m_direction(direction) {}
 
-    // Variables
-    int64_t m_kineticEnergy;
+    virtual ~Transition() {}
+    virtual void Step(Scalar delta) = 0;
+
+     virtual FluidNode* GetNodeA() = 0;
+     virtual FluidNode* GetNodeB() = 0;
+
+private:
+    Direction m_direction;
 };
 
-class LiquidLiquidTransition
+class GasGasTransition : public Transition
+{
+public:
+    GasGasTransition(GasNode& A, GasNode& B, Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB);
+
+    FluidNode* GetNodeA() { return &m_links[0].node; }
+    FluidNode* GetNodeB() { return &m_links[1].node; }
+
+    void Step(Scalar delta);
+
+
+    struct NodeLink
+    {
+        NodeLink(GasNode& iNode) : node(iNode) {}
+
+        // Contants
+        GasNode& node;
+        Meter altitudeRelativeToNode;
+
+        // Input
+        Energy inputEnergy;
+
+        // Ouput
+        Energy outputEnergy;
+        Quantity outputMaterial[Material::GasMoleculeCount];
+    };
+
+    static const int LinkCount = 2;
+
+private:
+
+
+    NodeLink m_links[LinkCount];
+
+    // Contants
+    //GasNode& m_A;
+    //GasNode& m_B;
+    //Meter m_altitudeA;
+    //Meter m_altitudeB;
+    Scalar m_frictionCoef;
+    Scalar m_section;
+
+    // Variables
+    Energy m_kineticEnergy;
+    //Energy m_inputEnergyFromA;
+    //Energy m_inputEnergyFromB;
+
+    //Energy m_outputEnergyBalanceToA;
+    //Energy m_outputEnergyBalanceToB;
+    //Quantity m_outputMaterialBalanceA[Material::GasMoleculeCount];
+    //Quantity m_outputMaterialBalanceB[Material::GasMoleculeCount];
+};
+
+class LiquidLiquidTransition : public Transition
 {
     LiquidLiquidTransition(LiquidNode& A, LiquidNode& B);
 
@@ -214,22 +288,22 @@ class LiquidLiquidTransition
     int64_t m_kineticEnergy;
 };
 
-class GasLiquidTransition
+class GasLiquidTransition : public Transition
 {
-    GasLiquidTransition(GasNode& A, LiquidNode& B);
+    GasLiquidTransition(GasNode& A, LiquidNode& B, Meter altitudeA, Meter altitudeB);
 
     // Contants
     GasNode& m_A;
     LiquidNode& m_B;
-    Mm m_altitudeA;
-    Mm m_altitudeB;
+    Meter m_altitudeA;
+    Meter m_altitudeB;
     Scalar m_frictionCoef;
 
     // Variables
     Energy m_kineticEnergy;
 };
 
-class SharedVolumeGasLiquidTransition
+class SharedVolumeGasLiquidTransition : public Transition
 {
     SharedVolumeGasLiquidTransition(GasNode& A, LiquidNode& B);
 
@@ -246,8 +320,23 @@ class SharedVolumeGasLiquidTransition
 
 class PhysicEngine
 {
+public:
+    ~PhysicEngine();
 
+    void Step(Scalar delta);
 
+    void Flush(); // Delete transition but not nodes
+
+    void CheckDuplicates();
+
+    void AddTransition(Transition* transition);
+
+    void AddFluidNode(FluidNode* node);
+
+private:
+
+    std::vector<Transition*> m_transitions;
+    std::vector<FluidNode*> m_nodes;
 };
 
 

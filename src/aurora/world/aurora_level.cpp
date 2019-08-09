@@ -30,6 +30,15 @@ Level::Level(Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int roo
 }
 
 
+void Level::FindTileAt(std::vector<Tile*>& matchs, MmRect area)
+{
+    for(Tile* tile : m_rootTiles)
+    {
+        tile->FindTileAt(matchs, area);
+    }
+}
+
+
 
 //scalar const AuroraWorld::MinTileSize = 0.0625;
 

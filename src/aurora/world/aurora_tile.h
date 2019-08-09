@@ -225,6 +225,8 @@ public:
 
     bool Split(Level* level);
 
+    void FindTileAt(std::vector<Tile*>& matchs, MmRect area);
+
 private:
 
 

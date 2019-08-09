@@ -21,6 +21,7 @@ typedef int64_t Quantity;
 
 typedef int32_t Mm; // Mm
 typedef Scalar Volume; // m2
+typedef Scalar Meter; // m
 
 Volume MnSquareToVolume(Mm size);
 

@@ -31,6 +31,9 @@ public:
     Mm2 GetSize() const { return m_size; };
     Mm GetMinTileSize() const { return m_minTileSize; }
 
+    void FindTileAt(std::vector<Tile*>& matchs, MmRect area);
+
+
     //Rect2 GetArea() const;
 
 private:

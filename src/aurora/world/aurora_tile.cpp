@@ -196,6 +196,30 @@ bool Tile::Split(Level* level)
     }
 }
 
+void Tile::FindTileAt(std::vector<Tile*>& matchs, MmRect area)
+{
+    switch(IsInside(area))
+    {
+    case Tile::InsideMode::Yes:
+    case Tile::InsideMode::Partially:
+    {
+        if(IsComposite())
+        {
+            for(Tile* child: GetChildren())
+            {
+                child->FindTileAt(matchs, area);
+            }
+        }
+        else
+        {
+            matchs.push_back(this);
+        }
+    }
+    break;
+    case Tile::InsideMode::No:
+    break;
+    }
+}
 
 
 ////////////////////////
@@ -580,6 +604,7 @@ TileContent TileContent::TakeProportion(int proportion)
 
     return tileProportion;
 }
+
 
 
 

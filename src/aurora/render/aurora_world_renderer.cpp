@@ -221,18 +221,13 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
         Vector2 pos = tile->GetPosition().ToVector2() * MnToGodot;
         real_t size = tile->GetSize() * MnToGodot;
 
-        texture->draw_rect(ci, Rect2(pos, Vector2(size, size)));
-
-
-
-
-
+        //texture->draw_rect(ci, Rect2(pos, Vector2(size, size)));
 
 
 
         if(pos.x < 1000 && pos.y < 1000)
         {
-            Color color(0.2f,0.2f,0.2f);
+            Color color(0.9f,0.9f,0.9f);
             GasNode const& gas = tile->GetContent()->GetGazNode();
 
             Scalar pressure = gas.GetPressure();
@@ -246,8 +241,6 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
             float bottomPressureColor = float((bottomPressure-100000) * 1e-3);
 
 
-            m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(pressure), color);
-            m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
 
             Vector<Vector2> points;
             points.push_back(pos);
@@ -271,6 +264,10 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
 
             draw_polygon(points, colors);
+
+            m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(pressure * 1e-5), color);
+            m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
+
         }
 
 
