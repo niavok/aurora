@@ -100,7 +100,8 @@ void AuroraWorld::InitPhysics()
                         relativeAltitudeB = tile->GetPosition().y - tileToConnect->GetPosition().y + relativeAltitudeA;
                     }
 
-                    ConnectTiles(tile, tileToConnect, Transition::DIRECTION_RIGHT, relativeAltitudeA, relativeAltitudeB);
+                    Meter section = MIN(tileToConnect->GetSize(), tile->GetSize());
+                    ConnectTiles(tile, tileToConnect, Transition::DIRECTION_RIGHT, relativeAltitudeA, relativeAltitudeB, section);
                 }
             }
 
@@ -117,7 +118,8 @@ void AuroraWorld::InitPhysics()
                 level->FindTileAt(tilesToConnect, tileBottom);
                 for(Tile* tileToConnect : tilesToConnect)
                 {
-                    ConnectTiles(tile, tileToConnect, Transition::DIRECTION_DOWN, tile->GetSize(), 0);
+                    Meter section = MIN(tileToConnect->GetSize(), tile->GetSize());
+                    ConnectTiles(tile, tileToConnect, Transition::DIRECTION_DOWN, tile->GetSize(), 0, section);
                 }
             }
         }
@@ -126,9 +128,15 @@ void AuroraWorld::InitPhysics()
     m_physicEngine.CheckDuplicates();
 }
 
-void AuroraWorld::ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB)
+void AuroraWorld::ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB, Meter section)
 {
-    Transition* transition = new GasGasTransition(tileA->GetContent()->GetGazNode(), tileB->GetContent()->GetGazNode(), direction, relativeAltitudeA, relativeAltitudeB);
+    GasGasTransition::Config config(tileA->GetContent()->GetGazNode(), tileB->GetContent()->GetGazNode());
+    config.relativeAltitudeA = relativeAltitudeA;
+    config.relativeAltitudeB = relativeAltitudeB;
+    config.direction = direction;
+    config.section = section;
+
+    Transition* transition = new GasGasTransition(config);
     m_physicEngine.AddTransition(transition);
 }
 

@@ -210,13 +210,19 @@ Material PhysicalConstants::GetDissolvedMaterial(Material material)
 
 
 ////////////////////////
-/// GasNode
+/// FluidNode
 ////////////////////////
 
 FluidNode::~FluidNode()
 {
 
 }
+
+void FluidNode::AddTransition(TransitionLink const& transitionLink)
+{
+    m_transitionLinks.push_back(transitionLink);
+}
+
 
 ////////////////////////
 /// GasNode
@@ -301,7 +307,21 @@ void GasNode::PrepareTransitions()
 void GasNode::ApplyTransitions()
 {
     // Apply transition output
-    // TODO
+    for(TransitionLink& transitionLink : m_transitionLinks)
+    {
+        Transition::NodeLink* link = transitionLink.transition->GetNodeLink(transitionLink.index);
+        assert(link->node == this);
+
+
+        m_thermalEnergy += link->outputEnergy;
+        link->outputEnergy = 0;
+
+        for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+        {
+            m_nMaterials[gazIndex] += link->outputMaterial[gazIndex];
+            link->outputMaterial[gazIndex] = 0;
+        }
+    }
 }
 
 void GasNode::ComputeCache()
@@ -338,8 +358,6 @@ void GasNode::ComputeCache()
 
     m_cacheComputed = true;
 }
-
-
 
 Scalar GasNode::GetPressure() const
 {
@@ -446,12 +464,27 @@ void LiquidNode::TakeThermalEnergy(Energy thermalEnergy)
 ///////////////
 
 
-GasGasTransition::GasGasTransition(GasNode& A, GasNode& B, Direction direction, Meter altitudeA, Meter altitudeB)
-    : Transition (direction)
-    , m_links {A, B }
+GasGasTransition::GasGasTransition(GasGasTransition::Config const& config)
+    : Transition (config.direction)
+    , m_links {&config.A, &config.B }
+    , m_frictionCoef(0.99) // TODO
+    , m_section(config.section)
+    , m_kineticEnergy(0)
 {
-    m_links[0].altitudeRelativeToNode = altitudeA;
-    m_links[1].altitudeRelativeToNode = altitudeB;
+    m_links[0].altitudeRelativeToNode = config.relativeAltitudeA;
+    m_links[1].altitudeRelativeToNode = config.relativeAltitudeB;
+
+    for(int i = 0; i < LinkCount; i++)
+    {
+        m_links[i].inputEnergy = 0;
+        m_links[i].outputEnergy = 0;
+
+        for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+        {
+            m_links[i].outputMaterial[gazIndex] = 0;
+        }
+
+    }
 }
 
 void GasGasTransition::Step(Scalar delta)
@@ -495,8 +528,8 @@ void GasGasTransition::Step(Scalar delta)
 
     NodeLink& linkA = m_links[0];
     NodeLink& linkB = m_links[1];
-    GasNode& A = linkA.node;
-    GasNode& B = linkB.node;
+    GasNode& A = *((GasNode*) linkA.node);
+    GasNode& B = *((GasNode*) linkB.node);
 
 
     Scalar pressureA = A.GetPressure() + A.GetPressureGradient() * linkA.altitudeRelativeToNode;
@@ -542,20 +575,20 @@ void GasGasTransition::Step(Scalar delta)
 
     if(kineticEnergyNeedsAfterFriction > 0)
     {
-        linkA.outputEnergy = kineticEnergyDelta;
+        linkA.outputEnergy = -kineticEnergyDelta;
     }
     else if(kineticEnergyNeedsAfterFriction < 0)
     {
-        linkB.outputEnergy = kineticEnergyDelta;
+        linkB.outputEnergy = -kineticEnergyDelta;
     }
     else
     {
         if(m_kineticEnergy > 0)
         {
-            linkB.outputEnergy = kineticEnergyDelta;
+            linkB.outputEnergy = -kineticEnergyDelta;
         }
         else {
-            linkA.outputEnergy = kineticEnergyDelta;
+            linkA.outputEnergy = -kineticEnergyDelta;
         }
     }
 
@@ -602,15 +635,18 @@ void GasGasTransition::Step(Scalar delta)
 
     // TODO gravity energy
 
-    Quantity sourceTotalN = m_links[sourceIndex].node.GetN();
+    GasNode& sourceNode = *((GasNode*) m_links[sourceIndex].node);
+
+    Quantity sourceTotalN = sourceNode.GetN();
 
     for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
     {
         // TODO diffusion
-        Scalar compositionRatio = Scalar(m_links[sourceIndex].node.GetN(Material(gazIndex))) / Scalar(sourceTotalN);
+        Scalar compositionRatio = Scalar(sourceNode.GetN(Material(gazIndex))) / Scalar(sourceTotalN);
         Quantity quantity = Quantity(finalDeltaN * compositionRatio);
-        m_links[sourceIndex].outputMaterial[gazIndex] = quantity;
-        m_links[destinationIndex].outputMaterial[gazIndex] = -quantity;
+        m_links[sourceIndex].outputMaterial[gazIndex] = -quantity;
+        m_links[destinationIndex].outputMaterial[gazIndex] = quantity;
+        // TODO take energy !
     }
 }
 
@@ -674,6 +710,8 @@ void PhysicEngine::CheckDuplicates()
 void PhysicEngine::AddTransition(Transition* transition)
 {
     m_transitions.push_back(transition);
+    transition->GetNodeA()->AddTransition(TransitionLink(transition, 0));
+    transition->GetNodeB()->AddTransition(TransitionLink(transition, 1));
 }
 
 void PhysicEngine::AddFluidNode(FluidNode* node)

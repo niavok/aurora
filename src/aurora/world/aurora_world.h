@@ -33,7 +33,7 @@ public:
     std::vector<Level*>& GetLevels() { return m_levels; }
     std::vector<Level*> const& GetLevels() const { return m_levels; }
 
-    void ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB);
+    void ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB, Meter section);
 
 private:
     void InitPhysics();

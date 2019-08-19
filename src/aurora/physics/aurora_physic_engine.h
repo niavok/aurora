@@ -94,6 +94,16 @@ public:
     static Material GetDissolvedMaterial(Material material);
 };
 
+class Transition;
+
+struct TransitionLink
+{
+    TransitionLink(Transition* iTransition, size_t iIndex) : transition(iTransition), index(iIndex) {}
+
+    Transition* transition;
+    size_t index;
+};
+
 class FluidNode
 {
 public:
@@ -103,6 +113,11 @@ public:
     virtual void ComputeCache() = 0;
     virtual void PrepareTransitions() = 0;
     virtual void ApplyTransitions() = 0;
+
+    void AddTransition(TransitionLink const& transitionLink);
+
+protected:
+    std::vector<TransitionLink> m_transitionLinks;
 };
 
 class GasNode : public FluidNode
@@ -160,8 +175,6 @@ private:
     Scalar m_cachePressure;
     Scalar m_cachePressureGradient;
     Scalar m_cacheTemperature;
-
-
 };
 
 class LiquidNode
@@ -213,30 +226,15 @@ public:
     virtual ~Transition() {}
     virtual void Step(Scalar delta) = 0;
 
-     virtual FluidNode* GetNodeA() = 0;
-     virtual FluidNode* GetNodeB() = 0;
-
-private:
-    Direction m_direction;
-};
-
-class GasGasTransition : public Transition
-{
-public:
-    GasGasTransition(GasNode& A, GasNode& B, Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB);
-
-    FluidNode* GetNodeA() { return &m_links[0].node; }
-    FluidNode* GetNodeB() { return &m_links[1].node; }
-
-    void Step(Scalar delta);
-
+    virtual FluidNode* GetNodeA() = 0;
+    virtual FluidNode* GetNodeB() = 0;
 
     struct NodeLink
     {
-        NodeLink(GasNode& iNode) : node(iNode) {}
+        NodeLink(FluidNode* iNode) : node(iNode) {}
 
         // Contants
-        GasNode& node;
+        FluidNode* node;
         Meter altitudeRelativeToNode;
 
         // Input
@@ -246,6 +244,36 @@ public:
         Energy outputEnergy;
         Quantity outputMaterial[Material::GasMoleculeCount];
     };
+
+    virtual NodeLink* GetNodeLink(size_t index) = 0;
+
+private:
+    Direction m_direction;
+};
+
+class GasGasTransition : public Transition
+{
+public:
+
+    struct Config
+    {
+        Config(GasNode& iA, GasNode& iB): A(iA), B(iB) { }
+        GasNode& A;
+        GasNode& B;
+        Direction direction;
+        Meter relativeAltitudeA;
+        Meter relativeAltitudeB;
+        Meter section = 0;
+    };
+
+    GasGasTransition(Config const& config);
+
+    FluidNode* GetNodeA() { return m_links[0].node; }
+    FluidNode* GetNodeB() { return m_links[1].node; }
+
+    NodeLink* GetNodeLink(size_t index) { return &m_links[index]; }
+
+    void Step(Scalar delta);
 
     static const int LinkCount = 2;
 
