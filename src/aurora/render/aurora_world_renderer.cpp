@@ -225,7 +225,7 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
 
 
-        if(pos.x < 1000 && pos.y < 1000)
+        if(true || pos.x < 1000 && pos.y < 1000)
         {
             Color color(0.9f,0.9f,0.9f);
             GasNode const& gas = tile->GetContent()->GetGazNode();
@@ -238,8 +238,8 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
             auto PressureToColor = [](Scalar pressure)
             {
-                Scalar const minPressure = 90000;
-                Scalar const maxPressure = 110000;
+                Scalar const minPressure = 16000;
+                Scalar const maxPressure = 300000;
 
                 return float((pressure-minPressure) / (maxPressure - minPressure));
             };

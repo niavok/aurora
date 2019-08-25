@@ -48,7 +48,10 @@ void AuroraWorld::Update(Scalar delta)
 {
     if(!m_isPaused)
     {
-        m_physicEngine.Step(delta);
+        //for(int i = 0; i < 20 ; i++)
+        {
+            m_physicEngine.Step(delta);
+        }
     }
 }
 
@@ -74,25 +77,25 @@ void AuroraWorld::InitPhysics()
 
 
             {
-                MmRect tileRight;
+                MmRect tileLeft;
 
-                tileRight.position.y = tile->GetPosition().y;
+                tileLeft.position.y = tile->GetPosition().y;
                 if(tile->GetPosition().x == 0)
                 {
                     // Make world circular
-                    tileRight.position.x = level->GetSize().x - 1;
+                    tileLeft.position.x = level->GetSize().x - 1;
                 }
                 else
                 {
-                    tileRight.position.x = tile->GetPosition().x + tile->GetSize();
+                    tileLeft.position.x = tile->GetPosition().x - 1;
                 }
 
-                tileRight.size.x = 1;
-                tileRight.size.y = tile->GetSize();
+                tileLeft.size.x = 1;
+                tileLeft.size.y = tile->GetSize();
 
 
                 std::vector<Tile*> tilesToConnect;
-                level->FindTileAt(tilesToConnect, tileRight);
+                level->FindTileAt(tilesToConnect, tileLeft);
                 for(Tile* tileToConnect : tilesToConnect)
                 {
                     Meter relativeAltitudeB;
@@ -160,7 +163,10 @@ void AuroraWorld::SetPause(bool pause)
 
 void AuroraWorld::Step()
 {
-    m_physicEngine.Step(0.1);
+    //for(int i = 0; i < 20 ; i++)
+    {
+        m_physicEngine.Step(0.1);
+    }
 }
 
 //void AuroraWorld::Repack()

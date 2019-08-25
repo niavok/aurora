@@ -4,7 +4,7 @@
 
 namespace aurora {
 
-static const Scalar gravity = 10; // m.s-2
+static const Scalar gravity = 100; // m.s-2
 static const Scalar KineticCoef = 100;
 
 static Quantity solidNByVolume[Material::MaterialCount] = // TODO
@@ -566,7 +566,7 @@ void GasGasTransition::Step(Scalar delta)
     GasNode& B = *((GasNode*) linkB.node);
 
 
-    if(B.GetTemperature() > 300)
+    if(B.GetTemperature() > 200)
     {
         char* plop;
         plop = "hot\n";
@@ -581,6 +581,8 @@ void GasGasTransition::Step(Scalar delta)
     //Scalar pressureBDeltaN = pressureB * m_section * viscosity;
 
     //Quantity transfertN = MAX(0, abs(finalDeltaN));
+
+
 
     for(int sourceIndex = 0; sourceIndex < LinkCount; sourceIndex++)
     {
@@ -613,6 +615,35 @@ void GasGasTransition::Step(Scalar delta)
             m_links[destinationIndex].outputEnergy += takenEnergy;
         }
     }
+
+    size_t sourceIndex;
+    size_t destinationIndex;
+    if(pressureA > pressureB)
+    {
+        sourceIndex = 0;
+        destinationIndex = 1;
+    }
+    else {
+        sourceIndex = 1;
+        destinationIndex = 0;
+    }
+
+    GasNode& sourceNode = *((GasNode*) m_links[sourceIndex].node);
+
+    Quantity sourceTotalN = sourceNode.GetN();
+    Quantity transfertN = 0;
+    for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+    {
+        transfertN += -m_links[sourceIndex].outputMaterial[gazIndex];
+    }
+
+    // Take energy ratio
+    Scalar takenRatio = Scalar(transfertN) / sourceTotalN;
+    Energy takenEnergy = Energy(takenRatio * sourceNode.GetEnergy());
+    //m_links[sourceIndex].outputEnergy -= takenEnergy;
+    //m_links[destinationIndex].outputEnergy += takenEnergy;
+
+    // Take energy from the source
 
     // TODO kinetic energy
 
@@ -803,6 +834,10 @@ void PhysicEngine::Step(Scalar delta)
 
     assert(initialTotalEnergy == finalTotalEnergy);
     assert(initialTotalN == finalTotalN);
+
+    GasNode* node =(GasNode*) m_nodes[700];
+    //node->AddThermalEnergy(10000);
+    node->ComputeCache();
 }
 
 void PhysicEngine::CheckDuplicates()

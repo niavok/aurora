@@ -20,7 +20,7 @@ void WorldEditor::GenerateHelloWord()
 {
     //Level* surfaceLevel = m_world.CreateLevel(50, 8, 1, 1); // 1 x 1 blocks * 50 mm * 2^ 8 = 12.8 m x 12.8 m
     //Level* surfaceLevel = m_world.CreateLevel(50, 0, 256, 256); // 256 x 256 blocks * 50 mm * 2^ 1 = 12.8 m x 12.8 m
-    Level* surfaceLevel = m_world.CreateLevel(50, 0, 10, 20); // 20 x 20 blocks * 50 mm * 2^ 1 = 1 m x 1 m
+    Level* surfaceLevel = m_world.CreateLevel(50, 0, 20, 40); // 20 x 20 blocks * 50 mm * 2^ 1 = 1 m x 1 m
 
 
     TileComposition dryAir;
@@ -54,8 +54,11 @@ void WorldEditor::GenerateHelloWord()
 
     // Paint hot air tile
     TileComposition hotDryAir = dryAir;
-    hotDryAir.Gas.temperature = 500;
-    PaintTiles(surfaceLevel, hotDryAir,  MmRect(0,surfaceHeight/2, surfaceWidth / 4,surfaceHeight));
+    hotDryAir.Gas.temperature = 4000;
+    hotDryAir.Gas.pressure = 300000;
+    //PaintTiles(surfaceLevel, hotDryAir,  MmRect(surfaceWidth / 4,2 * surfaceHeight /3, surfaceWidth / 4,surfaceHeight /4));
+    //PaintTiles(surfaceLevel, hotDryAir,  MmRect(surfaceWidth / 4, surfaceHeight - surfaceHeight /8, surfaceWidth / 8,surfaceHeight /8));
+    PaintTiles(surfaceLevel, hotDryAir,  MmRect(surfaceWidth / 4, surfaceHeight - surfaceHeight / 8, surfaceWidth / 6,surfaceHeight /8));
 }
 
 
