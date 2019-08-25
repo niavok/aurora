@@ -4,7 +4,9 @@
 
 namespace aurora {
 
-AuroraWorld::AuroraWorld() {
+AuroraWorld::AuroraWorld()
+    : m_isPaused(true)
+{
     //count = 0;
     printf("plop1\n");
     WorldEditor worldEditor(*this);
@@ -22,6 +24,9 @@ AuroraWorld::~AuroraWorld()
 }
 
 void AuroraWorld::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("set_pause", "pause"), &AuroraWorld::SetPause);
+    ClassDB::bind_method(D_METHOD("is_paused"), &AuroraWorld::IsPaused);
+    ClassDB::bind_method(D_METHOD("step"), &AuroraWorld::Step);
 }
 
 
@@ -41,7 +46,10 @@ void AuroraWorld::_notification(int p_what) {
 
 void AuroraWorld::Update(Scalar delta)
 {
-    m_physicEngine.Step(delta);
+    if(!m_isPaused)
+    {
+        m_physicEngine.Step(delta);
+    }
 }
 
 
@@ -140,7 +148,20 @@ void AuroraWorld::ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction d
     m_physicEngine.AddTransition(transition);
 }
 
+bool AuroraWorld::IsPaused()
+{
+    return m_isPaused;
+}
 
+void AuroraWorld::SetPause(bool pause)
+{
+    m_isPaused = pause;
+}
+
+void AuroraWorld::Step()
+{
+    m_physicEngine.Step(0.1);
+}
 
 //void AuroraWorld::Repack()
 //{

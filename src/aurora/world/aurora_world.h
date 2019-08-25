@@ -35,13 +35,17 @@ public:
 
     void ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB, Meter section);
 
+    bool IsPaused();
+    void SetPause(bool pause);
+    void Step();
+
 private:
     void InitPhysics();
 
     std::vector<Level*> m_levels;
 
     PhysicEngine m_physicEngine;
-
+    bool m_isPaused;
 };
 
 }
