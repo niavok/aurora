@@ -113,6 +113,9 @@ public:
     virtual void ComputeCache() = 0;
     virtual void PrepareTransitions() = 0;
     virtual void ApplyTransitions() = 0;
+    virtual Energy GetEnergy() const = 0;
+    virtual Energy GetCheckEnergy() const = 0;
+    virtual Quantity GetCheckN() const = 0;
 
     void AddTransition(TransitionLink const& transitionLink);
 
@@ -146,6 +149,10 @@ public:
     Scalar GetPressureGradient() const;
 
 
+    Energy GetEnergy() const;
+    Energy GetCheckEnergy() const { return m_thermalEnergy; }
+    Quantity GetCheckN() const { return m_cacheCheckN; }
+
     //Scalar ComputePressure() const;
     //Scalar ComputeTemperature() const;
     //Quantity ComputeN() const;
@@ -171,6 +178,7 @@ private:
     // Cache
     bool m_cacheComputed;
     Quantity m_cacheN;
+    Quantity m_cacheCheckN;
     Scalar m_cacheMass;
     Scalar m_cachePressure;
     Scalar m_cachePressureGradient;
@@ -247,6 +255,8 @@ public:
 
     virtual NodeLink* GetNodeLink(size_t index) = 0;
 
+    virtual Energy GetEnergy() const = 0;
+
 private:
     Direction m_direction;
 };
@@ -272,6 +282,8 @@ public:
     FluidNode* GetNodeB() { return m_links[1].node; }
 
     NodeLink* GetNodeLink(size_t index) { return &m_links[index]; }
+
+    Energy GetEnergy() const { return m_kineticEnergy; }
 
     void Step(Scalar delta);
 

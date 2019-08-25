@@ -236,9 +236,17 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
             //gas.ComputeNPT(N, pressure, temperature);
             Scalar bottomPressure = pressure + gas.GetPressureGradient() * tile->GetSize();
 
+            auto PressureToColor = [](Scalar pressure)
+            {
+                Scalar const minPressure = 90000;
+                Scalar const maxPressure = 110000;
+
+                return float((pressure-minPressure) / (maxPressure - minPressure));
+            };
+
             float temperatureColor = float(temperature / 300.);
-            float pressureColor = float((pressure-100000) * 1e-5);
-            float bottomPressureColor = float((bottomPressure-100000) * 1e-3);
+            float pressureColor = PressureToColor(pressure);
+            float bottomPressureColor = PressureToColor(bottomPressure);
 
 
 
