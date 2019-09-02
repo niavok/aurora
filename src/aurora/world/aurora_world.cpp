@@ -112,7 +112,7 @@ void AuroraWorld::InitPhysics()
                     }
 
                     Meter section = MIN(tileToConnect->GetSize(), tile->GetSize());
-                    ConnectTiles(tile, tileToConnect, Transition::DIRECTION_RIGHT, relativeAltitudeA, relativeAltitudeB, section);
+                    ConnectTiles(tile, tileToConnect, Transition::Direction(Transition::Direction::DIRECTION_LEFT), relativeAltitudeA, relativeAltitudeB, section);
                 }
             }
 
@@ -130,7 +130,7 @@ void AuroraWorld::InitPhysics()
                 for(Tile* tileToConnect : tilesToConnect)
                 {
                     Meter section = MIN(tileToConnect->GetSize(), tile->GetSize());
-                    ConnectTiles(tile, tileToConnect, Transition::DIRECTION_DOWN, tile->GetSize(), 0, section);
+                    ConnectTiles(tile, tileToConnect, Transition::Direction(Transition::Direction::DIRECTION_DOWN), tile->GetSize(), 0, section);
                 }
             }
         }

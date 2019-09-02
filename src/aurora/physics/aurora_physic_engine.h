@@ -222,20 +222,47 @@ private:
 class Transition
 {
 public:
-    enum Direction {
-        DIRECTION_UP,
-        DIRECTION_RIGHT,
-        DIRECTION_DOWN,
-        DIRECTION_LEFT,
+    class Direction {
+        public:
+        enum Value : uint8_t {
+            DIRECTION_UP,
+            DIRECTION_RIGHT,
+            DIRECTION_DOWN,
+            DIRECTION_LEFT,
+        };
+
+        Direction() = default;
+        constexpr Direction(Direction const& iDirection) : value(iDirection.value) { }
+        constexpr Direction(Value iValue) : value(iValue) { }
+        constexpr Direction(uint8_t iValue) : value(Value(iValue)) { }
+
+        operator Value() const { return value; }
+
+        Direction Opposite() const { 
+            uint8_t value2 = value +2;
+            uint8_t value3 = value2 & 3;
+            Direction::Value value4 = Direction::Value(value3);
+            Direction value5(value4);
+            Direction value6((value + 2) & 3);
+
+            //return value5;
+            return Direction((value + 2) & 3);
+        }
+        
+        private:
+        Value value;
     };
 
-    Transition(Direction direction) : m_direction(direction) {}
+    Transition(Direction direction, Scalar section) : m_direction(direction), m_section(section) {}
 
     virtual ~Transition() {}
     virtual void Step(Scalar delta) = 0;
 
     virtual FluidNode* GetNodeA() = 0;
     virtual FluidNode* GetNodeB() = 0;
+
+    Direction GetDirection(size_t index);
+    Scalar GetSection() const { return m_section; }
 
     struct NodeLink
     {
@@ -246,19 +273,24 @@ public:
         Meter altitudeRelativeToNode;
 
         // Input
-        Energy inputEnergy;
+        Energy inputKineticEnergy;
 
         // Ouput
-        Energy outputEnergy;
+        Energy outputThermalEnergy;
+        Energy outputKineticEnergy;
         Quantity outputMaterial[Material::GasMoleculeCount];
     };
 
     virtual NodeLink* GetNodeLink(size_t index) = 0;
+    virtual size_t GetNodeLinkCount() = 0;
 
-    virtual Energy GetEnergy() const = 0;
 
-private:
+    //virtual Energy GetEnergy() const = 0;
+
+protected:
     Direction m_direction;
+    Scalar m_section;
+
 };
 
 class GasGasTransition : public Transition
@@ -282,8 +314,10 @@ public:
     FluidNode* GetNodeB() { return m_links[1].node; }
 
     NodeLink* GetNodeLink(size_t index) { return &m_links[index]; }
+    size_t GetNodeLinkCount() { return LinkCount; }
 
-    Energy GetEnergy() const { return m_kineticEnergy; }
+
+    //Energy GetEnergy() const { return m_kineticEnergy; }
 
     void Step(Scalar delta);
 
@@ -300,10 +334,9 @@ private:
     //Meter m_altitudeA;
     //Meter m_altitudeB;
     Scalar m_frictionCoef;
-    Scalar m_section;
 
     // Variables
-    Energy m_kineticEnergy;
+    //Energy m_kineticEnergy;
     //Energy m_inputEnergyFromA;
     //Energy m_inputEnergyFromB;
 
