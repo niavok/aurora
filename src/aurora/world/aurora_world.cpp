@@ -110,9 +110,12 @@ void AuroraWorld::InitPhysics()
                         relativeAltitudeA = tile->GetSize() / 2;
                         relativeAltitudeB = tile->GetPosition().y - tileToConnect->GetPosition().y + relativeAltitudeA;
                     }
+                    
+                    Meter relativeLongitudeA = 0;
+                    Meter relativeLongitudeB = tileToConnect->GetSize();
 
                     Meter section = MIN(tileToConnect->GetSize(), tile->GetSize());
-                    ConnectTiles(tile, tileToConnect, Transition::Direction(Transition::Direction::DIRECTION_LEFT), relativeAltitudeA, relativeAltitudeB, section);
+                    ConnectTiles(tile, tileToConnect, Transition::Direction(Transition::Direction::DIRECTION_LEFT), relativeAltitudeA, relativeAltitudeB, relativeLongitudeA, relativeLongitudeB, section);
                 }
             }
 
@@ -130,7 +133,26 @@ void AuroraWorld::InitPhysics()
                 for(Tile* tileToConnect : tilesToConnect)
                 {
                     Meter section = MIN(tileToConnect->GetSize(), tile->GetSize());
-                    ConnectTiles(tile, tileToConnect, Transition::Direction(Transition::Direction::DIRECTION_DOWN), tile->GetSize(), 0, section);
+                    
+                    Meter relativeAltitudeA = tile->GetSize();
+                    Meter relativeAltitudeB = 0;
+                    Meter relativeLongitudeA;
+                    Meter relativeLongitudeB;
+
+                    if(tileToConnect->GetSize() < tile->GetSize())
+                    {
+                        relativeLongitudeB = tileToConnect->GetSize() / 2;
+                        relativeLongitudeA = tileToConnect->GetPosition().x - tile->GetPosition().x + relativeLongitudeB;
+                    }
+                    else
+                    {
+                        relativeLongitudeA = tile->GetSize() / 2;
+                        relativeLongitudeB = tile->GetPosition().x - tileToConnect->GetPosition().x + relativeLongitudeA;
+                    }
+
+
+
+                    ConnectTiles(tile, tileToConnect, Transition::Direction(Transition::Direction::DIRECTION_DOWN), relativeAltitudeA, relativeAltitudeB, relativeLongitudeA, relativeLongitudeB, section);
                 }
             }
         }
@@ -139,11 +161,13 @@ void AuroraWorld::InitPhysics()
     m_physicEngine.CheckDuplicates();
 }
 
-void AuroraWorld::ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB, Meter section)
+void AuroraWorld::ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB, Meter relativeLongitudeA, Meter relativeLongitudeB, Meter section)
 {
     GasGasTransition::Config config(tileA->GetContent()->GetGazNode(), tileB->GetContent()->GetGazNode());
     config.relativeAltitudeA = relativeAltitudeA;
     config.relativeAltitudeB = relativeAltitudeB;
+    config.relativeLongitudeA = relativeLongitudeA;
+    config.relativeLongitudeB = relativeLongitudeB;
     config.direction = direction;
     config.section = section;
 

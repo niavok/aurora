@@ -1,11 +1,12 @@
 #include "aurora_physic_engine.h"
 
 #include <assert.h>
+#include <stdio.h>
 
 namespace aurora {
 
-static const Scalar gravity = 10; // m.s-2
-static const Scalar KineticCoef = 10;
+static const Scalar gravity = 50; // m.s-2
+static const Scalar KineticCoef = 0.001;
 
 static Quantity solidNByVolume[Material::MaterialCount] = // TODO
 {
@@ -299,6 +300,11 @@ Energy GasNode::GetThermalEnergy() const
 
 void GasNode::PrepareTransitions()
 {
+    MigrateKineticEnergy();
+}
+
+void GasNode::MigrateKineticEnergy()
+{
     Energy energyByDirection[4];
     Scalar sectionSumByDirection[4];
 
@@ -307,6 +313,27 @@ void GasNode::PrepareTransitions()
         energyByDirection[i] = 0;
         sectionSumByDirection[i] = 0;
     }
+
+  auto ComputeEnergy = [&]()
+    {
+        Energy energy = m_thermalEnergy;
+        for(TransitionLink& transitionLink : m_transitionLinks)
+        {
+            Transition::NodeLink* link = transitionLink.transition->GetNodeLink(transitionLink.index);
+            energy += link->outputKineticEnergy;
+            energy += link->inputKineticEnergy;
+        }
+        for(int i = 0; i < 4 ; i++)
+        {
+            energy += energyByDirection[i];
+        }
+
+        return energy;
+    };
+
+    Energy initialEnergyCheck = ComputeEnergy();
+
+
     Scalar sectionSum = 0;
     
     auto TakeEnergy = [&energyByDirection](Transition::Direction direction, Scalar ratio) 
@@ -328,6 +355,35 @@ void GasNode::PrepareTransitions()
         
         sectionSumByDirection[linkDirection] += transitionLink.transition->GetSection();
         sectionSum += transitionLink.transition->GetSection();
+    }
+
+    // Transform opposite direction as heat
+    for(int i = 0; i < 2; i++)
+    {
+        Energy energyDiff = energyByDirection[i] - energyByDirection[i+2];
+        Energy thermalLoss = energyByDirection[i] + energyByDirection[i+2] - std::abs(energyDiff);
+        if(energyDiff > 0)
+        {
+            energyByDirection[i] = energyDiff;
+            energyByDirection[i + 2] = 0;
+        }
+        else if(energyDiff < 0)
+        {
+            energyByDirection[i] = 0;
+            energyByDirection[i + 2] = -energyDiff;
+        }
+        else
+        {
+            energyByDirection[i] = 0;
+            energyByDirection[i + 2] = 0;
+        }
+        
+        m_thermalEnergy += thermalLoss;
+
+        {
+            //Energy finalEnergyCheck = ComputeEnergy();
+            //assert(finalEnergyCheck == initialEnergyCheck);
+        }
     }
 
     for(TransitionLink& transitionLink : m_transitionLinks)
@@ -352,6 +408,14 @@ void GasNode::PrepareTransitions()
     {
         if(energyByDirection[i] > 0)
         {
+            m_thermalEnergy += TakeEnergy(Transition::Direction(i) , 1.0f);
+        }
+    }
+
+    /*for(int i = 0; i < 4 ; i++)
+    {
+        if(energyByDirection[i] > 0)
+        {
             // Rebound or absorb
             // For now rebound to all transitions
             Scalar localSectionSum = sectionSum;
@@ -369,11 +433,16 @@ void GasNode::PrepareTransitions()
                 assert(link->inputKineticEnergy  >= 0);
             }
         }
-    }
+    }*/
     
     for(int i = 0; i < 4 ; i++)
     {
         assert(energyByDirection[i] == 0);
+    }
+
+    {
+        //Energy finalEnergyCheck = ComputeEnergy();
+        //assert(finalEnergyCheck == initialEnergyCheck);
     }
 }
 
@@ -394,6 +463,8 @@ void GasNode::ApplyTransitions()
             link->outputMaterial[gazIndex] = 0;
         }
     }
+
+    //MigrateKineticEnergy();
 }
 
 void GasNode::ComputeCache()
@@ -575,6 +646,8 @@ GasGasTransition::GasGasTransition(GasGasTransition::Config const& config)
 {
     m_links[0].altitudeRelativeToNode = config.relativeAltitudeA;
     m_links[1].altitudeRelativeToNode = config.relativeAltitudeB;
+    m_links[0].longitudeRelativeToNode = config.relativeLongitudeA;
+    m_links[1].longitudeRelativeToNode = config.relativeLongitudeB;
 
     for(int i = 0; i < LinkCount; i++)
     {
@@ -647,16 +720,16 @@ void GasGasTransition::Step(Scalar delta)
 
     Energy kineticEnergyDelta = initialKineticEnergyDelta;
 
-    if(B.GetTemperature() > 200)
+    if(B.GetTemperature() > 150 || A.GetTemperature() > 150)
     {
-        //char* plop;
-        //plop = "hot\n";
+        char* plop;
+        plop = "hot\n";
     }
 
     Scalar pressureA = A.GetPressure() + A.GetPressureGradient() * linkA.altitudeRelativeToNode;
     Scalar pressureB = B.GetPressure() + B.GetPressureGradient() * linkB.altitudeRelativeToNode;
 
-    Scalar viscosity = 0.001;
+    Scalar viscosity = 0.1;
 
     //Scalar pressureADeltaN = pressureA * m_section * viscosity;
     //Scalar pressureBDeltaN = pressureB * m_section * viscosity;
@@ -664,6 +737,7 @@ void GasGasTransition::Step(Scalar delta)
     //Quantity transfertN = MAX(0, abs(finalDeltaN));
 
 
+    float diffusionRatio = 0;
 
     for(int sourceIndex = 0; sourceIndex < LinkCount; sourceIndex++)
     {
@@ -672,7 +746,7 @@ void GasGasTransition::Step(Scalar delta)
         int destinationIndex = 1 -sourceIndex;
 
         Scalar pressure = sourceNode.GetPressure() + sourceNode.GetPressureGradient() * link.altitudeRelativeToNode;
-        Scalar pressureDeltaN = pressure * m_section * viscosity / sourceNode.GetTemperature();
+        Scalar pressureDeltaN = diffusionRatio * pressure * m_section * viscosity / sourceNode.GetTemperature();
 
         Quantity sourceTotalN = sourceNode.GetN();
         Quantity transfertN = Quantity(pressureDeltaN);
@@ -842,9 +916,14 @@ void GasGasTransition::Step(Scalar delta)
         m_links[destinationIndex].outputEnergy += takenEnergy;
     }*/
 
+    // Apply pressure acceleration
+    Scalar pressureDiff = pressureA - pressureB;
+    Scalar kineticAcceleration = pressureDiff * m_section * viscosity * KineticCoef;
+    Energy newKineticEnergyDelta = kineticEnergyDelta + kineticAcceleration;
+
     size_t sourceIndex;
     size_t destinationIndex;
-    if(kineticEnergyDelta > 0)
+    if(newKineticEnergyDelta > 0)
     {
         sourceIndex = 0;
         destinationIndex = 1;
@@ -854,7 +933,11 @@ void GasGasTransition::Step(Scalar delta)
         destinationIndex = 0;
     }
 
-    Energy kineticEnergy = abs(kineticEnergyDelta);
+    
+
+    
+
+    Energy kineticEnergy = abs(newKineticEnergyDelta);
 
     if(kineticEnergy > 0)
     {
@@ -887,10 +970,10 @@ void GasGasTransition::Step(Scalar delta)
 
     assert(m_links[sourceIndex].outputKineticEnergy == 0);
     
-    // Apply pressure acceleration
+    /*// Apply pressure acceleration
     Scalar pressureDiff = pressureA - pressureB;
     Scalar kineticAcceleration = pressureDiff * m_section * viscosity * KineticCoef;
-    Energy newKineticEnergyDelta = kineticEnergyDelta + kineticAcceleration;
+    Energy newKineticEnergyDelta = kineticEnergyDelta + kineticAcceleration;*/
     size_t newSourceIndex;
     size_t newDestinationIndex;
     //TODO energy dissipation
@@ -906,7 +989,7 @@ void GasGasTransition::Step(Scalar delta)
     }
 
     Energy newKineticEnergyBeforeLoss = abs(newKineticEnergyDelta);
-    Energy thermalLoss = newKineticEnergyBeforeLoss * 0.1;
+    Energy thermalLoss = newKineticEnergyBeforeLoss * 0.001;
     Energy newKineticEnergy = newKineticEnergyBeforeLoss - thermalLoss;
 
 
@@ -914,6 +997,22 @@ void GasGasTransition::Step(Scalar delta)
 
     m_links[newDestinationIndex].outputKineticEnergy = newKineticEnergy;
 
+    Energy sourceEnergyDiff =  energyDiff /2;
+    Energy destinationEnergyDiff =  energyDiff - sourceEnergyDiff;
+
+    /*if(energyDiff < 0)
+    {
+        m_links[newSourceIndex].outputThermalEnergy -= energyDiff;
+    }
+    else
+    {
+        m_links[newDestinationIndex].outputThermalEnergy -= energyDiff;
+    }*/
+
+    m_links[newSourceIndex].outputThermalEnergy -= sourceEnergyDiff;
+    m_links[newDestinationIndex].outputThermalEnergy -= destinationEnergyDiff;
+
+/*
     if(energyDiff > 0)
     {
         m_links[newSourceIndex].outputThermalEnergy -= energyDiff;
@@ -921,7 +1020,7 @@ void GasGasTransition::Step(Scalar delta)
     else
     {
         m_links[newDestinationIndex].outputThermalEnergy -= energyDiff;
-    }
+    }*/
 
 
     Energy finalCheckEnergy = 0;
@@ -996,49 +1095,32 @@ void PhysicEngine::Step(Scalar delta)
         initialTotalN += node->GetCheckN();
     }
 
-    size_t transitionIndex = 0;
-    for(Transition* transition : m_transitions)
-    {
-        
-        for(size_t i = 0; i < transition->GetNodeLinkCount(); i++)
-        {
-            assert(transition->GetNodeLink(i)->inputKineticEnergy >= 0);
-        }
-        transitionIndex++;
-    }
-
-    for(Transition* transition : m_transitions)
-    {
-        for(size_t i = 0; i < transition->GetNodeLinkCount(); i++)
-        {
-           // initialTotalEnergy += transition->GetNodeLink(i)->inputKineticEnergy;
-            //initialTotalEnergy += transition->GetNodeLink(i)->outputThermalEnergy;
-            //initialTotalEnergy += transition->GetNodeLink(i)->outputKineticEnergy;
-        }
-    }
-
-    for(Transition* transition : m_transitions)
+    /*for(Transition* transition : m_transitions)
     {
         for(size_t i = 0; i < transition->GetNodeLinkCount(); i++)
         {
             assert(transition->GetNodeLink(i)->inputKineticEnergy >= 0);
         }
-    }
+    }*/
 
     for(FluidNode* node : m_nodes)
     {
         node->PrepareTransitions();
+        // TODO move to post step to remove one compute cache ?
+        node->ComputeCache();
+
         //__int128 check = ComputeEnergy();
+        
         //assert(initialTotalEnergy == check);
     }
 
-    for(Transition* transition : m_transitions)
+    /*for(Transition* transition : m_transitions)
     {
         for(size_t i = 0; i < transition->GetNodeLinkCount(); i++)
         {
             assert(transition->GetNodeLink(i)->inputKineticEnergy >= 0);
         }
-    }
+    }*/
 
     for(Transition* transition : m_transitions)
     {
@@ -1076,8 +1158,10 @@ void PhysicEngine::Step(Scalar delta)
     
 
     GasNode* node =(GasNode*) m_nodes[700];
-    //node->AddThermalEnergy(10000);
+    //node->AddThermalEnergy(10000 * node->GetN());
+    node->AddThermalEnergy(0.1 * node->GetN());
     node->ComputeCache();
+    printf("N=%lld\n",node->GetN());
 }
 
 void PhysicEngine::CheckDuplicates()
@@ -1105,7 +1189,7 @@ void PhysicEngine::AddFluidNode(FluidNode* node)
     m_nodes.push_back(node);
 }
 
-Transition::Direction Transition::GetDirection(size_t index)
+Transition::Direction Transition::GetDirection(size_t index) const
 {
     if(index == 0)
     {

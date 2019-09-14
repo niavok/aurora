@@ -40,6 +40,7 @@ private:
 	void DrawWorld(RID& ci);
     void DrawLevel(RID& ci, Level const* level);
     void DrawTile(RID& ci, Tile const* tile);
+	void DrawTileOverlay(RID& ci, Tile const* tile);
 
 	NodePath m_targetWorldPath;
 	AuroraWorld const* m_targetWorld;

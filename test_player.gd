@@ -14,7 +14,7 @@ func _physics_process(delta):
 	var velocityDirection = Vector2()
 	var speed = 10000
 	
-	print("FPS=" + String(Engine.get_frames_per_second()))
+	#print("FPS=" + String(Engine.get_frames_per_second()))
 	if not world.use_free_camera:
 		if Input.is_action_pressed("move_right"):
 			velocityDirection.x+=1

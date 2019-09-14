@@ -7,6 +7,7 @@
 #include "../world/aurora_level.h"
 
 #include <string>
+#include <assert.h>
 
 namespace aurora {
 
@@ -185,10 +186,90 @@ void AuroraWorldRenderer::DrawLevel(RID& ci, Level const* level)
 		DrawTile(ci, tile);
 	}
 
-	printf("tilecount=%d\n", drawTileCount);
+	for(Tile const* tile : level->GetRootTiles())
+	{
+		DrawTileOverlay(ci, tile);
+	}
+
+	//printf("tilecount=%d\n", drawTileCount);
 }
 
 
+void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
+{
+	if(tile->IsComposite())
+	{
+        for(Tile const* child: tile->GetChildren())
+		{
+			DrawTileOverlay(ci, child);
+		}
+	}
+	else
+	{
+		GasNode const& gas = tile->GetContent()->GetGazNode();
+		Vector2 tilePosition = tile->GetPosition().ToVector2() * MnToGodot;
+
+		// Draw flow
+		for(TransitionLink const & transitionLink : gas.GetTransitionLinks())
+		{
+			if(transitionLink.index > 0)
+			{
+				// Display on master
+				//continue;
+			}
+
+			GasGasTransition const* transition = reinterpret_cast<GasGasTransition*>(transitionLink.transition);
+
+			Transition::NodeLink const* link = transition->GetNodeLink(transitionLink.index);
+			if(link->outputKineticEnergy == 0)
+			{
+				continue;
+			}
+
+			Meter altitudeRelativeToNode;
+			Meter longitudeRelativeToNode;
+			Vector2 relativeBase(link->longitudeRelativeToNode, link->altitudeRelativeToNode);
+
+			Transition::Direction direction = transition->GetDirection(transitionLink.index);
+
+			Vector2 offsetDirection(1,1);
+			Vector2 offsetPosition(0,0);
+			Color transitionColor(0, 0, 0);
+
+			switch (direction)
+			{
+			case Transition::Direction::DIRECTION_DOWN:
+				offsetPosition = Vector2(0, 0);
+				offsetDirection = Vector2(0, -1);
+				transitionColor = Color(1, 0, 0);
+				break;
+			case Transition::Direction::DIRECTION_UP:
+				offsetPosition = Vector2(1, 0);
+				offsetDirection = Vector2(0, 1);
+				transitionColor = Color(0, 1, 0);
+				break;
+			case Transition::Direction::DIRECTION_LEFT:
+				offsetPosition = Vector2(0, 0);
+				offsetDirection = Vector2(1, 0);
+				transitionColor = Color(0, 0, 1);
+				break;
+			case Transition::Direction::DIRECTION_RIGHT:
+				offsetPosition = Vector2(0, 1);
+				offsetDirection = Vector2(-1, 0);
+				transitionColor = Color(1, 1, 0);
+				break;
+			default:
+				assert(false);
+				break;
+			}
+
+			//real_t length = link->inputKineticEnergy * 0.1;
+			real_t length = link->outputKineticEnergy * 0.1;
+
+			draw_line(tilePosition + relativeBase + offsetPosition, tilePosition + relativeBase + offsetPosition + offsetDirection * length, transitionColor, 1.f);
+		}
+	}
+}
 
 void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 {
@@ -230,11 +311,11 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
             Color color(0.9f,0.9f,0.9f);
             GasNode const& gas = tile->GetContent()->GetGazNode();
 
-            Scalar pressure = gas.GetPressure();
+            Scalar tilePressure = gas.GetPressure();
             Scalar temperature = gas.GetTemperature();
 
             //gas.ComputeNPT(N, pressure, temperature);
-            Scalar bottomPressure = pressure + gas.GetPressureGradient() * tile->GetSize();
+            Scalar bottomPressure = tilePressure + gas.GetPressureGradient() * tile->GetSize();
 
             auto PressureToColor = [](Scalar pressure)
             {
@@ -245,7 +326,7 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
             };
 
             float temperatureColor = float(temperature / 300.);
-            float pressureColor = PressureToColor(pressure);
+            float pressureColor = PressureToColor(tilePressure);
             float bottomPressureColor = PressureToColor(bottomPressure);
 
 
@@ -273,15 +354,16 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
             draw_polygon(points, colors);
 
-            m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(pressure * 1e-5), color);
+            m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(tilePressure * 1e-5), color);
             m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
-
-        }
-
-
-
-
-
+			draw_line(pos, pos + Vector2(0, size), Color(0.5,0.5,0.5));
+			draw_line(pos, pos + Vector2(size, 0), Color(0.5,0.5,0.5));
+			
+			/*draw_line(pos, pos + Vector2(0, size-1), Color(0.5,0.5,0.5));
+			draw_line(pos, pos + Vector2(size-1, 0), Color(0.5,0.5,0.5));
+			draw_line(pos+ Vector2(size-1, size-1), pos + Vector2(0, size-1), Color(0.5,0.5,0.5));
+			draw_line(pos+ Vector2(size-1, size-1), pos + Vector2(size-1, 0), Color(0.5,0.5,0.5));*/
+		}
 		//virtual void draw_rect(RID p_canvas_item, const Rect2 &p_rect, bool p_tile = false, const Color &p_modulate = Color(1, 1, 1), bool p_transpose = false, const Ref<Texture> &p_normal_map = Ref<Texture>()) const;
 
 

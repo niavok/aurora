@@ -118,6 +118,8 @@ public:
     virtual Quantity GetCheckN() const = 0;
 
     void AddTransition(TransitionLink const& transitionLink);
+    std::vector<TransitionLink>& GetTransitionLinks() { return m_transitionLinks; }
+    std::vector<TransitionLink> const& GetTransitionLinks() const { return m_transitionLinks; }
 
 protected:
     std::vector<TransitionLink> m_transitionLinks;
@@ -164,6 +166,7 @@ public:
 
 private:
 
+    void MigrateKineticEnergy();
 
     // Constants
     Mm m_altitude;
@@ -219,8 +222,8 @@ private:
     Energy m_thermalEnergy;
 };
 
-class Transition
-{
+
+class Transition {
 public:
     class Direction {
         public:
@@ -261,7 +264,7 @@ public:
     virtual FluidNode* GetNodeA() = 0;
     virtual FluidNode* GetNodeB() = 0;
 
-    Direction GetDirection(size_t index);
+    Direction GetDirection(size_t index) const;
     Scalar GetSection() const { return m_section; }
 
     struct NodeLink
@@ -271,6 +274,7 @@ public:
         // Contants
         FluidNode* node;
         Meter altitudeRelativeToNode;
+        Meter longitudeRelativeToNode;
 
         // Input
         Energy inputKineticEnergy;
@@ -305,6 +309,8 @@ public:
         Direction direction;
         Meter relativeAltitudeA;
         Meter relativeAltitudeB;
+        Meter relativeLongitudeA;
+        Meter relativeLongitudeB;
         Meter section = 0;
     };
 
@@ -314,6 +320,7 @@ public:
     FluidNode* GetNodeB() { return m_links[1].node; }
 
     NodeLink* GetNodeLink(size_t index) { return &m_links[index]; }
+    NodeLink const* GetNodeLink(size_t index) const { return &m_links[index]; }
     size_t GetNodeLinkCount() { return LinkCount; }
 
 
