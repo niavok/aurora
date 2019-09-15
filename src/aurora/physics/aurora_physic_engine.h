@@ -242,14 +242,22 @@ public:
         operator Value() const { return value; }
 
         Direction Opposite() const { 
-            uint8_t value2 = value +2;
+            /*uint8_t value2 = value +2;
             uint8_t value3 = value2 & 3;
             Direction::Value value4 = Direction::Value(value3);
             Direction value5(value4);
             Direction value6((value + 2) & 3);
 
-            //return value5;
+            //return value5;*/
             return Direction((value + 2) & 3);
+        }
+
+        Direction Next() const { 
+            return Direction((value + 1) & 3);
+        }
+
+        Direction Previous() const { 
+            return Direction((value + 3) & 3);
         }
         
         private:

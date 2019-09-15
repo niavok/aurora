@@ -323,6 +323,7 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
                 Scalar const maxPressure = 300000;
 
                 return float((pressure-minPressure) / (maxPressure - minPressure));
+				//return 0;
             };
 
             float temperatureColor = float(temperature / 300.);

@@ -343,6 +343,8 @@ void GasNode::MigrateKineticEnergy()
         return takenEnergy;
     };
 
+    const float DiffusionFactor = 1.0; // TODO remove if 1
+
     for(TransitionLink& transitionLink : m_transitionLinks)
     {
 
@@ -350,18 +352,33 @@ void GasNode::MigrateKineticEnergy()
 
         Transition::Direction linkDirection = transitionLink.transition->GetDirection(transitionLink.index);
         
-        energyByDirection[linkDirection.Opposite()] += link->outputKineticEnergy;
+        Energy energyToDispatch = link->outputKineticEnergy;
+
+        Energy forwardEnergy = energyToDispatch * DiffusionFactor;
+        energyToDispatch -= forwardEnergy;
+
+        Energy leftEnergy = energyToDispatch / 2;
+        energyToDispatch -= leftEnergy;
+
+        energyByDirection[linkDirection.Opposite()] += forwardEnergy;
+        energyByDirection[linkDirection.Next()] += leftEnergy;
+        energyByDirection[linkDirection.Previous()] += energyToDispatch;
         link->outputKineticEnergy = 0;
         
         sectionSumByDirection[linkDirection] += transitionLink.transition->GetSection();
         sectionSum += transitionLink.transition->GetSection();
     }
 
-    // Transform opposite direction as heat
+    // Transform opposite direction as heat or reflect in opposite directions
+
+    const float DiversionRatio = 1.0; // TODO remove if 0
+
+    Energy divertedEnergy[2];
+
     for(int i = 0; i < 2; i++)
     {
         Energy energyDiff = energyByDirection[i] - energyByDirection[i+2];
-        Energy thermalLoss = energyByDirection[i] + energyByDirection[i+2] - std::abs(energyDiff);
+        divertedEnergy[i] = energyByDirection[i] + energyByDirection[i+2] - std::abs(energyDiff);
         if(energyDiff > 0)
         {
             energyByDirection[i] = energyDiff;
@@ -378,13 +395,53 @@ void GasNode::MigrateKineticEnergy()
             energyByDirection[i + 2] = 0;
         }
         
-        m_thermalEnergy += thermalLoss;
+        
 
         {
             //Energy finalEnergyCheck = ComputeEnergy();
             //assert(finalEnergyCheck == initialEnergyCheck);
         }
     }
+
+    for(int i = 0; i < 2; i++)
+    {
+        assert(energyByDirection[i] * energyByDirection[i+2] == 0);
+    }
+
+    for(int i = 0; i < 2; i++)
+    {
+        Energy thermalLoss = divertedEnergy[i] * (1-DiversionRatio);
+        m_thermalEnergy += thermalLoss;
+        divertedEnergy[i] -= thermalLoss;
+
+        uint8_t leftIndex = i+1;
+        uint8_t rightIndex = (i+3) & 3;
+
+        if(energyByDirection[leftIndex] == 0 && energyByDirection[rightIndex] == 0)
+        {
+            // No flow, divert in both direction
+            Energy leftEnergy = divertedEnergy[i] / 2;
+            divertedEnergy[i] -= leftEnergy;
+            energyByDirection[leftIndex] += leftEnergy;
+            energyByDirection[rightIndex] += divertedEnergy[i];
+        }
+        else if (energyByDirection[leftIndex] != 0)
+        {
+            // Left have flow, use it
+            energyByDirection[leftIndex] += divertedEnergy[i];
+        }
+        else
+        {
+            assert(energyByDirection[rightIndex] != 0);
+            energyByDirection[rightIndex] += divertedEnergy[i];
+        }        
+    }
+
+    for(int i = 0; i < 2; i++)
+    {
+       // assert(energyByDirection[i] * energyByDirection[i+2] == 0);
+    }
+    
 
     for(TransitionLink& transitionLink : m_transitionLinks)
     {
@@ -404,15 +461,8 @@ void GasNode::MigrateKineticEnergy()
 
     // Find remaining ene
 
+/*
     for(int i = 0; i < 4 ; i++)
-    {
-        if(energyByDirection[i] > 0)
-        {
-            m_thermalEnergy += TakeEnergy(Transition::Direction(i) , 1.0f);
-        }
-    }
-
-    /*for(int i = 0; i < 4 ; i++)
     {
         if(energyByDirection[i] > 0)
         {
@@ -434,6 +484,15 @@ void GasNode::MigrateKineticEnergy()
             }
         }
     }*/
+
+        for(int i = 0; i < 4 ; i++)
+    {
+        if(energyByDirection[i] > 0)
+        {
+            m_thermalEnergy += TakeEnergy(Transition::Direction(i) , 1.0f);
+        }
+    }
+
     
     for(int i = 0; i < 4 ; i++)
     {
@@ -989,7 +1048,7 @@ void GasGasTransition::Step(Scalar delta)
     }
 
     Energy newKineticEnergyBeforeLoss = abs(newKineticEnergyDelta);
-    Energy thermalLoss = newKineticEnergyBeforeLoss * 0.001;
+    Energy thermalLoss = newKineticEnergyBeforeLoss * 0.08;
     Energy newKineticEnergy = newKineticEnergyBeforeLoss - thermalLoss;
 
 
@@ -1156,12 +1215,23 @@ void PhysicEngine::Step(Scalar delta)
 
 
     
+    {
+        GasNode* node =(GasNode*) m_nodes[597];
+        //node->AddThermalEnergy(10000 * node->GetN());
+        node->AddThermalEnergy(0.1 * node->GetN());
+        node->ComputeCache();
+        printf("N=%lld\n",node->GetN());
+    }
 
-    GasNode* node =(GasNode*) m_nodes[700];
-    //node->AddThermalEnergy(10000 * node->GetN());
-    node->AddThermalEnergy(0.1 * node->GetN());
-    node->ComputeCache();
-    printf("N=%lld\n",node->GetN());
+    {
+        GasNode* node =(GasNode*) m_nodes[123];
+        //node->AddThermalEnergy(10000 * node->GetN());
+        
+        //node->AddThermalEnergy(-0.1 * node->GetN());
+        node->TakeThermalEnergy(0.1 * node->GetThermalEnergy());
+        node->ComputeCache();
+        printf("N=%lld\n",node->GetN());
+    }
 }
 
 void PhysicEngine::CheckDuplicates()
