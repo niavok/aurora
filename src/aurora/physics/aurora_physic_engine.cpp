@@ -369,6 +369,23 @@ void GasNode::MigrateKineticEnergy()
         sectionSum += transitionLink.transition->GetSection();
     }
 
+    // If not section in front, divert to side
+    for(int i = 0; i < 4 ; i++)
+    {
+        if(sectionSumByDirection[i] == 0 && energyByDirection[i] > 0)
+        {
+            uint8_t leftIndex = i+1;
+            uint8_t rightIndex = (i+3) & 3;
+
+            Energy leftEnergy = energyByDirection[i] / 2;
+            energyByDirection[i] -= leftEnergy;
+            energyByDirection[leftIndex] += leftEnergy;
+            energyByDirection[rightIndex] += energyByDirection[i];
+            energyByDirection[i] = 0;
+        }
+    }
+
+
     // Transform opposite direction as heat or reflect in opposite directions
 
     const float DiversionRatio = 1.0; // TODO remove if 0
@@ -1206,15 +1223,21 @@ void PhysicEngine::Step(Scalar delta)
 // TODO REPAIR
     assert(initialTotalEnergy == check);
     assert(initialTotalN == finalTotalN);
-
+#if 0
     for(FluidNode* node : m_nodes)
     {
+        GasNode* gasNode = (GasNode*) node;
+        // Artificial radiation cooling
+        gasNode->TakeThermalEnergy(0.0001 * gasNode->GetThermalEnergy());
+
+
+
         node->ApplyTransitions();
         node->ComputeCache();
     }
+#endif
 
-
-    
+#if 1
     {
         GasNode* node =(GasNode*) m_nodes[597];
         //node->AddThermalEnergy(10000 * node->GetN());
@@ -1222,7 +1245,9 @@ void PhysicEngine::Step(Scalar delta)
         node->ComputeCache();
         printf("N=%lld\n",node->GetN());
     }
+#endif
 
+#if 1
     {
         GasNode* node =(GasNode*) m_nodes[123];
         //node->AddThermalEnergy(10000 * node->GetN());
@@ -1232,6 +1257,7 @@ void PhysicEngine::Step(Scalar delta)
         node->ComputeCache();
         printf("N=%lld\n",node->GetN());
     }
+#endif
 }
 
 void PhysicEngine::CheckDuplicates()

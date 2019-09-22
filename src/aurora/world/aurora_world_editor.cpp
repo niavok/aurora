@@ -56,7 +56,7 @@ void WorldEditor::GenerateHelloWord()
     TileComposition hotDryAir = dryAir;
     hotDryAir.Gas.temperature = 4000;
     hotDryAir.Gas.pressure = 100000;
-    //PaintTiles(surfaceLevel, hotDryAir,  MmRect(surfaceWidth / 4, surfaceHeight - surfaceHeight / 6, surfaceWidth / 6,surfaceHeight /8));
+    PaintTiles(surfaceLevel, hotDryAir,  MmRect(surfaceWidth / 4, surfaceHeight - surfaceHeight / 6, surfaceWidth / 6,surfaceHeight /8));
     
     TileComposition highPressureDryAir = dryAir;
     highPressureDryAir.Gas.pressure = 200000;
