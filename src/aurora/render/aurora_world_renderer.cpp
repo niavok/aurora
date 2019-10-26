@@ -6,6 +6,8 @@
 #include "../world/aurora_tile.h"
 #include "../world/aurora_level.h"
 
+#include "../physics/aurora_physic_gas_gas_transition.h"
+
 #include <string>
 #include <assert.h>
 
@@ -226,8 +228,8 @@ void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 				continue;
 			}
 
-			Meter altitudeRelativeToNode;
-			Meter longitudeRelativeToNode;
+			//Meter altitudeRelativeToNode;
+			//Meter longitudeRelativeToNode;
 			Vector2 relativeBase(link->longitudeRelativeToNode, link->altitudeRelativeToNode);
 
 			Transition::Direction direction = transition->GetDirection(transitionLink.index);
@@ -306,7 +308,7 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
 
 
-        if(true || pos.x < 1000 && pos.y < 1000)
+        if(true || (pos.x < 1000 && pos.y < 1000))
         {
             Color color(0.9f,0.9f,0.9f);
             GasNode const& gas = tile->GetContent()->GetGazNode();

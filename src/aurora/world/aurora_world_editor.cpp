@@ -1,11 +1,10 @@
 #include "aurora_world_editor.h"
 #include "aurora_level.h"
 
+#include "../physics/aurora_physic_constants.h"
+
+
 namespace aurora {
-
-
-
-
 
 WorldEditor::WorldEditor(AuroraWorld& world)
     : m_world(world)

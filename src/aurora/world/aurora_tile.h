@@ -5,6 +5,8 @@
 #include "core/math/rect2.h"
 #include "../tools/aurora_types.h"
 #include "../physics/aurora_physic_engine.h"
+#include "../physics/aurora_physic_gas_node.h"
+#include "../physics/aurora_physic_liquid_node.h"
 #include <vector>
 
 

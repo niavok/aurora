@@ -2,6 +2,9 @@
 #include "aurora_world_editor.h"
 #include "aurora_level.h"
 
+#include "../physics/aurora_physic_gas_gas_transition.h"
+
+
 namespace aurora {
 
 AuroraWorld::AuroraWorld()

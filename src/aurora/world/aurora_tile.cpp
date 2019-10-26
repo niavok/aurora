@@ -4,6 +4,7 @@
 #include "aurora_level.h"
 #include "aurora_world.h"
 
+#include "../physics/aurora_physic_constants.h"
 
 namespace aurora {
 
