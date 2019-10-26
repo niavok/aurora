@@ -1223,19 +1223,20 @@ void PhysicEngine::Step(Scalar delta)
 // TODO REPAIR
     assert(initialTotalEnergy == check);
     assert(initialTotalN == finalTotalN);
-#if 0
+
     for(FluidNode* node : m_nodes)
     {
+#if 0
         GasNode* gasNode = (GasNode*) node;
         // Artificial radiation cooling
         gasNode->TakeThermalEnergy(0.0001 * gasNode->GetThermalEnergy());
-
+#endif
 
 
         node->ApplyTransitions();
         node->ComputeCache();
     }
-#endif
+
 
 #if 1
     {
