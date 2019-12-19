@@ -2,6 +2,7 @@
 #include "aurora_level.h"
 
 #include "../physics/aurora_physic_constants.h"
+#include "../physics/aurora_physic_types.h"
 
 
 namespace aurora {
@@ -28,8 +29,8 @@ void WorldEditor::GenerateHelloWord()
     // Nitrogen 80%, Oxygen 20%
     // Temperature 125K
     // Pressure 1 bar
-    dryAir.Gas.composition[Material::Nitrogen] = 80;
-    dryAir.Gas.composition[Material::Oxygen] = 20;
+    dryAir.Gas.composition[Gas::Nitrogen] = 80;
+    dryAir.Gas.composition[Gas::Oxygen] = 20;
     dryAir.Gas.pressure = 100000.; // 1 bar
     dryAir.Gas.temperature = 100.; // 0 degree C
 
@@ -39,7 +40,7 @@ void WorldEditor::GenerateHelloWord()
     // Nitrogen 80%, Oxygen 20%
     // Temperature 125K
     // Pressure 1 bar
-    steam.Gas.composition[Material::Water] = 100;
+    steam.Gas.composition[Gas::Water] = 100;
     steam.Gas.pressure = 100000.; // 1 bar
     steam.Gas.temperature = 100.; // 0 degree C
 
@@ -77,21 +78,21 @@ void WorldEditor::GenerateTestWord()
     // Nitrogen 80%, Oxygen 20%
     // Temperature 125K
     // Pressure 1 bar
-    dryAir.Gas.composition[Material::Nitrogen] = 80;
-    dryAir.Gas.composition[Material::Oxygen] = 20;
+    dryAir.Gas.composition[Gas::Nitrogen] = 80;
+    dryAir.Gas.composition[Gas::Oxygen] = 20;
     dryAir.Gas.pressure = 1.f;
     dryAir.Gas.temperature = 125.f;
 
     TileComposition saltWater;
     // Water 100% of water with 10% of salt, 115 K, at 1 bar
-    saltWater.AddLiquidVolume(Material::Water, 1.f, 0.1f , 115, 1);
+    saltWater.AddLiquidVolume(Liquid::Water, 1.f, 0.1f , 115, 1);
 
 
     TileComposition clayRock;
     clayRock.porosity = 0;
     clayRock.solidTemperature = 120;
-    clayRock.AddSolidVolume(Material::Clay, 1000);
-    clayRock.AddSolidVolume(Material::Gold, 1);
+    clayRock.AddSolidVolume(Solid::Clay, 1000);
+    clayRock.AddSolidVolume(Solid::Gold, 1);
 
     int surfaceWidth = surfaceLevel->GetSize().x;
     int surfaceHeight = surfaceLevel->GetSize().y;
@@ -213,11 +214,12 @@ void WorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
             remainingVolume -= solidVolume;
             remainingVolumePart-= solid.volumePart;
 
-            Quantity solidN = PhysicalConstants::EstimateSolidNByVolume(solid.material, solidVolume);
+            Quantity solidN = PhysicalConstants::EstimateSolidNByVolume(solid.solid, solidVolume);
 
-            Energy thermalEnergy = PhysicalConstants::EstimateThermalEnergy(solid.material, solidN, composition.solidTemperature);
+            //Energy thermalEnergy = PhysicalConstants::EstimateThermalEnergy(solid.solid, solidN, composition.solidTemperature);
+            Energy thermalEnergy = 0; // TODO
 
-            newContent.AddSolid(solid.material, solidN, thermalEnergy);
+            newContent.AddSolid(solid.solid, solidN, thermalEnergy);
         }
     }
 
@@ -229,21 +231,23 @@ void WorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
             Volume liquidVolume = Volume(availableVolume * liquid.volumeProportion);
 
 
-            Quantity totalQuantity = PhysicalConstants::EstimateLiquidNByVolume(liquid.material, liquidVolume, liquid.pressure, liquid.temperature);
+            Quantity totalQuantity = PhysicalConstants::EstimateLiquidNByVolume(liquid.liquid, liquidVolume, liquid.pressure, liquid.temperature);
             Quantity dissolvedQuantity = Quantity(totalQuantity * liquid.dissolvedProportion);
             Quantity liquidQuantity = totalQuantity - dissolvedQuantity;
 
-            Energy thermalEnergy = PhysicalConstants::EstimateThermalEnergy(liquid.material, liquidQuantity, liquid.temperature);
-            thermalEnergy += PhysicalConstants::EstimateThermalEnergy(PhysicalConstants::GetDissolvedMaterial(liquid.material), dissolvedQuantity, liquid.temperature);
+            Energy thermalEnergy = 0;
+            //Energy thermalEnergy = PhysicalConstants::EstimateThermalEnergy(liquid.liquid, liquidQuantity, liquid.temperature);
+            // TODO
+            //thermalEnergy += PhysicalConstants::EstimateThermalEnergy(PhysicalConstants::GetDissolvedMaterial(liquid.liquid), dissolvedQuantity, liquid.temperature);
 
-            newContent.AddLiquid(liquid.material, liquidQuantity, dissolvedQuantity, thermalEnergy);
+            newContent.AddLiquid(liquid.liquid, liquidQuantity, dissolvedQuantity, thermalEnergy);
          }
     }
 
     Quantity GasPartSum = 0;
-    for (int GasIndex = 0; GasIndex < Material::GasMoleculeCount; GasIndex++)
+    for (Gas gas : AllGas())
     {
-        GasPartSum += composition.Gas.composition[GasIndex];
+        GasPartSum += composition.Gas.composition[gas];
     }
 
     if(GasPartSum > 0)
@@ -251,32 +255,32 @@ void WorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
         Volume GasVolume = newContent.GetGasVolume();
         Quantity totalN = PhysicalConstants::EstimateGasN(GasVolume, composition.Gas.pressure, composition.Gas.temperature);
 
-        for (int GasIndex = 0; GasIndex < Material::GasMoleculeCount; GasIndex++)
+        for (Gas gas : AllGas())
         {
             if(GasPartSum <= 0)
             {
                 break;
             }
 
-            Scalar proportion = Scalar(composition.Gas.composition[GasIndex]) / Scalar(GasPartSum);
+            Scalar proportion = Scalar(composition.Gas.composition[gas]) / Scalar(GasPartSum);
             Volume GasN= Volume(totalN * proportion);
 
             totalN -= GasN;
-            GasPartSum-= composition.Gas.composition[GasIndex];
+            GasPartSum-= composition.Gas.composition[gas];
 
-            Energy thermalEnergy = PhysicalConstants::EstimateThermalEnergy(Material(GasIndex), GasN, composition.Gas.temperature);
+            Energy thermalEnergy = PhysicalConstants::EstimateThermalEnergy(gas, GasN, composition.Gas.temperature);
 
-            newContent.AddGas(Material(GasIndex), GasN, thermalEnergy);
+            newContent.AddGas(gas, GasN, thermalEnergy);
         }
     }
     tile->SetContent(newContent);
     tile->GetContent()->GetGazNode().ComputeCache();
 }
 
-void TileComposition::AddLiquidVolume(Material material, Scalar volumeProportion, Scalar dissolvedProportion, Scalar temperature, Scalar pressure)
+void TileComposition::AddLiquidVolume(Liquid liquid, Scalar volumeProportion, Scalar dissolvedProportion, Scalar temperature, Scalar pressure)
 {
     TileLiquidVolume volume;
-    volume.material = material;
+    volume.liquid = liquid;
     volume.volumeProportion = volumeProportion;
     volume.dissolvedProportion = dissolvedProportion;
     volume.temperature = temperature;
@@ -284,19 +288,19 @@ void TileComposition::AddLiquidVolume(Material material, Scalar volumeProportion
      liquids.push_back(volume);
 }
 
-void TileComposition::AddSolidVolume(Material material, Volume volumePart)
+void TileComposition::AddSolidVolume(Solid solid, Volume volumePart)
 {
     TileSolidVolume volume;
-    volume.material = material;
+    volume.solid = solid;
     volume.volumePart = volumePart;
     solids.push_back(volume);
 }
 
 TileGasComposition::TileGasComposition()
 {
-    for(int i = 0; i < Material::GasMoleculeCount; i++)
+    for(Gas gas : AllGas())
     {
-        composition[i] = 0;
+        composition[gas] = 0;
     }
 }
 

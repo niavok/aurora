@@ -30,6 +30,7 @@ class SharedVolumeGasLiquidTransition : public Transition
 class PhysicEngine
 {
 public:
+    PhysicEngine();
     ~PhysicEngine();
 
     void Step(Scalar delta);

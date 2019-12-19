@@ -83,7 +83,7 @@ public:
         // Ouput
         Energy outputThermalEnergy;
         Energy outputKineticEnergy;
-        Quantity outputMaterial[Material::GasMoleculeCount];
+        GasComposition outputMaterial;
     };
 
     virtual NodeLink* GetNodeLink(size_t index) = 0;

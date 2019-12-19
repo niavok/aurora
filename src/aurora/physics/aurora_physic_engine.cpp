@@ -1,11 +1,17 @@
 #include "aurora_physic_engine.h"
 
 #include "aurora_physic_gas_node.h"
+#include "aurora_physic_constants.h"
 
 #include <assert.h>
 #include <stdio.h>
 
 namespace aurora {
+
+PhysicEngine::PhysicEngine()
+{
+    PhysicalConstants::Init();
+}
 
 PhysicEngine::~PhysicEngine()
 {

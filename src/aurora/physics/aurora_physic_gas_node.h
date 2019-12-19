@@ -15,15 +15,15 @@ public:
     Volume GetVolume() const;
     void SetVolume(Volume volume);
 
-    Quantity GetN(Material material) const;
+    Quantity GetN(Gas gas) const;
     Energy GetThermalEnergy() const;
 
-    void AddN(Material material, Quantity N);
+    void AddN(Gas gas, Quantity N);
     void AddThermalEnergy(Energy thermalEnergy);
 
 
 
-    void TakeN(Material material, Quantity N);
+    void TakeN(Gas gas, Quantity N);
     void TakeThermalEnergy(Energy thermalEnergy);
 
     Scalar GetPressure() const;
@@ -56,7 +56,7 @@ private:
 
     // Variables
     //Quantity m_N; // TODO cache ?
-    Quantity m_nMaterials[Material::GasMoleculeCount];
+    GasComposition m_nComposition;
     Energy m_thermalEnergy;
 
     // Cache

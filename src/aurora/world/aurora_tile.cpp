@@ -315,13 +315,13 @@ TileContent::~TileContent()
 }
 
 
-void TileContent::AddSolid(Material material, Quantity N, Energy thermalEnergy)
+void TileContent::AddSolid(Solid solid, Quantity N, Energy thermalEnergy)
 {
     bool materialFound = false;
 
     for(SolidQuantity& quantity : m_solidComposition)
     {
-        if(quantity.material == material)
+        if(quantity.solid == solid)
         {
             quantity.N =  N;
             materialFound = true;
@@ -330,7 +330,7 @@ void TileContent::AddSolid(Material material, Quantity N, Energy thermalEnergy)
 
     if(!materialFound)
     {
-        SolidQuantity newQuantity(material, N);
+        SolidQuantity newQuantity(solid, N);
         m_solidComposition.push_back(newQuantity);
     }
 
@@ -339,14 +339,14 @@ void TileContent::AddSolid(Material material, Quantity N, Energy thermalEnergy)
     UpdateVolumes();
 }
 
-void TileContent::AddLiquid(Material material, Quantity N, Quantity dissolvedN, Energy thermalEnergy)
+void TileContent::AddLiquid(Liquid liquid, Quantity N, Quantity dissolvedN, Energy thermalEnergy)
 {
     LiquidNode* nodeToUse = nullptr;
 
     std::vector<LiquidNode*> m_liquidNodes;
     for(LiquidNode* node : m_liquidNodes)
     {
-        if(node->GetMaterial() == material)
+        if(node->GetLiquid() == liquid)
         {
             nodeToUse = node;
             break;
@@ -355,7 +355,7 @@ void TileContent::AddLiquid(Material material, Quantity N, Quantity dissolvedN, 
 
     if(nodeToUse == nullptr)
     {
-        nodeToUse = new LiquidNode(material);
+        nodeToUse = new LiquidNode(liquid);
         m_liquidNodes.push_back(nodeToUse);
     }
 
@@ -366,9 +366,9 @@ void TileContent::AddLiquid(Material material, Quantity N, Quantity dissolvedN, 
     UpdateVolumes();
 }
 
-void TileContent::AddGas(Material material, Quantity N, Energy thermalEnergy)
+void TileContent::AddGas(Gas gas, Quantity N, Energy thermalEnergy)
 {
-    m_gasNode.AddN(material, N);
+    m_gasNode.AddN(gas, N);
     m_gasNode.AddThermalEnergy(thermalEnergy);
 
     UpdateVolumes();
@@ -393,7 +393,7 @@ void TileContent::UpdateVolumes()
 
     for(SolidQuantity& quantity : m_solidComposition)
     {
-        Volume needVolume = PhysicalConstants::GetSolidVolumeByN(quantity.material, quantity.N);
+        Volume needVolume = PhysicalConstants::GetSolidVolumeByN(quantity.solid, quantity.N);
         needSolidVolume += needVolume;
     }
 
@@ -478,9 +478,9 @@ bool TileContent::HasSolid() const
 
 bool TileContent::HasGas() const
 {
-    for (int GasIndex = 0; GasIndex < Material::GasMoleculeCount; GasIndex++)
+    for (Gas gas : AllGas())
     {
-        if(m_gasNode.GetN(Material(GasIndex)) > 0)
+        if(m_gasNode.GetN(gas) > 0)
         {
                 return true;
         }
@@ -521,17 +521,17 @@ TileContent TileContent::TakeProportion(int proportion)
     TileContent tileProportion(m_volume / proportion);
 
     // Take solid
-    std::vector<Material> solidsToRemove;
+    std::vector<Solid> solidsToRemove;
     for (SolidQuantity& solid : m_solidComposition)
     {
         Quantity quantityToTake = solid.N/proportion;
 
-        tileProportion.m_solidComposition.push_back(SolidQuantity(solid.material, quantityToTake));
+        tileProportion.m_solidComposition.push_back(SolidQuantity(solid.solid, quantityToTake));
         solid.N -= quantityToTake;
 
         if(solid.N == 0)
         {
-            solidsToRemove.push_back(solid.material);
+            solidsToRemove.push_back(solid.solid);
         }
     }
 
@@ -547,7 +547,7 @@ TileContent TileContent::TakeProportion(int proportion)
         Quantity dissolvedQuantityToTake = liquid->GetDissolvedN()/proportion;
         Energy thermalEnergyToTake = liquid->GetThermalEnergy() / proportion;
 
-        tileProportion.AddLiquid(liquid->GetMaterial(), quantityToTake, dissolvedQuantityToTake, thermalEnergyToTake);
+        tileProportion.AddLiquid(liquid->GetLiquid(), quantityToTake, dissolvedQuantityToTake, thermalEnergyToTake);
         liquid->TakeN(quantityToTake);
         liquid->TakeDissolvedN(quantityToTake);
         liquid->TakeThermalEnergy(thermalEnergyToTake);
@@ -559,22 +559,22 @@ TileContent TileContent::TakeProportion(int proportion)
     }
 
     // Take gas
-    for (int GasIndex = 0; GasIndex < Material::GasMoleculeCount; GasIndex++)
+    for (Gas gas : AllGas())
     {
-        Quantity quantityToTake = m_gasNode.GetN(Material(GasIndex)) / proportion;
-        tileProportion.m_gasNode.AddN(Material(GasIndex), quantityToTake);
+        Quantity quantityToTake = m_gasNode.GetN(gas) / proportion;
+        tileProportion.m_gasNode.AddN(gas, quantityToTake);
     }
 
     Energy thermalEnergyToTake = m_gasNode.GetThermalEnergy() / proportion;
     tileProportion.m_gasNode.AddThermalEnergy(thermalEnergyToTake);
 
     // Clean
-    for (Material material : solidsToRemove)
+    for (Solid solidToRemove : solidsToRemove)
     {
         int index = 0;
         for (SolidQuantity& solid : m_solidComposition)
         {
-            if(solid.material == material)
+            if(solid.solid == solidToRemove)
             {
                 break;
             }
@@ -727,8 +727,8 @@ TileContent TileContent::TakeProportion(int proportion)
 //	return m_GasComposition;
 //}
 
-SolidQuantity::SolidQuantity(Material iMaterial, Quantity iN)
-    : material(iMaterial)
+SolidQuantity::SolidQuantity(Solid iSolid, Quantity iN)
+    : solid(iSolid)
     , N(iN)
 {
 

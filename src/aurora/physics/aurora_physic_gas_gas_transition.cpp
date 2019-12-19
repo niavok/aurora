@@ -21,9 +21,9 @@ GasGasTransition::GasGasTransition(GasGasTransition::Config const& config)
         m_links[i].inputKineticEnergy = 0;
         m_links[i].outputKineticEnergy = 0;
 
-        for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+        for(Gas gas : AllGas())
         {
-            m_links[i].outputMaterial[gazIndex] = 0;
+            m_links[i].outputMaterial[gas] = 0;
         }
 
     }
@@ -120,13 +120,15 @@ void GasGasTransition::Step(Scalar delta)
 
         if(transfertN > 0)
         {
-            for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+
+            for(Gas gas : AllGas())
+            //for(size_t gazIndex = 0; gazIndex < GasCount; gazIndex++)
             {
                 // TODO diffusion
-                Scalar compositionRatio = Scalar(sourceNode.GetN(Material(gazIndex))) / Scalar(sourceTotalN);
+                Scalar compositionRatio = Scalar(sourceNode.GetN(gas)) / Scalar(sourceTotalN);
                 Quantity quantity = Quantity(transfertN * compositionRatio);
-                m_links[sourceIndex].outputMaterial[gazIndex] -= quantity;
-                m_links[destinationIndex].outputMaterial[gazIndex] += quantity;
+                m_links[sourceIndex].outputMaterial[gas] -= quantity;
+                m_links[destinationIndex].outputMaterial[gas] += quantity;
             }
 
             // Take energy ratio
@@ -317,13 +319,13 @@ void GasGasTransition::Step(Scalar delta)
 
         if(transfertN > 0)
         {
-            for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+            for(Gas gas : AllGas())
             {
                 // No diffusion
-                Scalar compositionRatio = Scalar(sourceNode.GetN(Material(gazIndex))) / Scalar(sourceTotalN);
+                Scalar compositionRatio = Scalar(sourceNode.GetN(gas)) / Scalar(sourceTotalN);
                 Quantity quantity = Quantity(transfertN * compositionRatio);
-                m_links[sourceIndex].outputMaterial[gazIndex] -= quantity;
-                m_links[destinationIndex].outputMaterial[gazIndex] += quantity;
+                m_links[sourceIndex].outputMaterial[gas] -= quantity;
+                m_links[destinationIndex].outputMaterial[gas] += quantity;
             }
 
             // Take energy ratio

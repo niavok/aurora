@@ -11,9 +11,9 @@ GasNode::GasNode()
     , m_volume(0)
     , m_thermalEnergy(0)
 {
-    for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+    for(Gas gas : AllGas())
     {
-        m_nMaterials[gazIndex] = 0;
+        m_nComposition[gas] = 0;
     }
 }
 
@@ -23,9 +23,9 @@ GasNode::GasNode(GasNode& node)
     , m_thermalEnergy(node.m_thermalEnergy)
     , m_cacheComputed(false)
 {
-    for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+    for(Gas gas : AllGas())
     {
-        m_nMaterials[gazIndex] = node.m_nMaterials[gazIndex];
+        m_nComposition[gas] = node.m_nComposition[gas];
     }
 }
 
@@ -41,9 +41,9 @@ Volume GasNode::GetVolume() const
     return m_volume;
 }
 
-void GasNode::AddN(Material material, Quantity N)
+void GasNode::AddN(Gas gas, Quantity N)
 {
-    m_nMaterials[material] += N;
+    m_nComposition[gas] += N;
     m_cacheComputed = false;
 }
 
@@ -53,9 +53,9 @@ void GasNode::AddThermalEnergy(Energy thermalEnergy)
     m_cacheComputed = false;
 }
 
-void GasNode::TakeN(Material material, Quantity N)
+void GasNode::TakeN(Gas gas, Quantity N)
 {
-    m_nMaterials[material] -= N;
+    m_nComposition[gas] -= N;
     m_cacheComputed = false;
 }
 
@@ -65,9 +65,9 @@ void GasNode::TakeThermalEnergy(Energy thermalEnergy)
     m_cacheComputed = false;
 }
 
-Quantity GasNode::GetN(Material material) const
+Quantity GasNode::GetN(Gas gas) const
 {
-    return m_nMaterials[material];
+    return m_nComposition[gas];
 }
 
 Energy GasNode::GetThermalEnergy() const
@@ -310,10 +310,10 @@ void GasNode::ApplyTransitions()
         m_thermalEnergy += link->outputThermalEnergy;
         link->outputThermalEnergy = 0;
 
-        for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+        for(Gas gas : AllGas())
         {
-            m_nMaterials[gazIndex] += link->outputMaterial[gazIndex];
-            link->outputMaterial[gazIndex] = 0;
+            m_nComposition[gas] += link->outputMaterial[gas];
+            link->outputMaterial[gas] = 0;
         }
     }
 
@@ -326,15 +326,15 @@ void GasNode::ComputeCache()
     m_cacheCheckN = 0;
     m_cacheMass = 0;
     Energy energyPerK = 0;
-    for(int gazIndex = 0; gazIndex < Material::GasMoleculeCount; gazIndex++)
+     for(Gas gas : AllGas())
     {
-        Quantity materialN = m_nMaterials[gazIndex];
+        Quantity materialN = m_nComposition[gas];
 
         m_cacheCheckN += materialN;
         if(materialN > 0)
         {
-            energyPerK += PhysicalConstants::GetSpecificHeat(Material(gazIndex)) * materialN;
-            m_cacheMass += PhysicalConstants::GetMassByN(Material(gazIndex)) * materialN;
+            energyPerK += PhysicalConstants::GetSpecificHeatByN(gas) * materialN;
+            m_cacheMass += PhysicalConstants::GetMassByN(gas) * materialN;
         }
     }
 
@@ -363,7 +363,7 @@ void GasNode::ComputeCache()
     }
 
     // Compute pressure
-    m_cachePressure = m_cacheN * PhysicalConstants::gasConstant * m_cacheTemperature / m_volume;
+     m_cachePressure = PhysicalConstants::ComputePressure(m_cacheN, m_volume, m_cacheTemperature);
     if(m_cachePressure < 0)
     {
         m_cachePressure = 0;

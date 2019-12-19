@@ -3,8 +3,8 @@
 
 namespace aurora {
 
-LiquidNode::LiquidNode(Material material)
-    : m_material(material)
+LiquidNode::LiquidNode(Liquid liquid)
+    : m_liquid(liquid)
     , m_altitude(0)
     , m_volume(0)
     , m_N(0)
@@ -24,9 +24,9 @@ Volume LiquidNode::GetVolume() const
     return m_volume;
 }
 
-Material LiquidNode::GetMaterial() const
+Liquid LiquidNode::GetLiquid() const
 {
-    return m_material;
+    return m_liquid;
 }
 
 Quantity LiquidNode::GetN() const

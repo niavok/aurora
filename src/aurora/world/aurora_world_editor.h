@@ -11,14 +11,14 @@ struct TileGasComposition
 {
     TileGasComposition();
 
-    Quantity composition[Material::GasMoleculeCount];
+    GasComposition composition;
     Scalar pressure;
     Scalar temperature;
 };
 
 struct TileLiquidVolume
 {
-    Material material;
+    Liquid liquid;
     Scalar volumeProportion;
     Scalar dissolvedProportion;
     Scalar temperature;
@@ -27,7 +27,7 @@ struct TileLiquidVolume
 
 struct TileSolidVolume
 {
-    Material material;
+    Solid solid;
     Quantity volumePart;
 };
 
@@ -39,8 +39,8 @@ struct TileComposition
     std::vector<TileSolidVolume> solids;
     Scalar solidTemperature;
 
-    void AddLiquidVolume(Material material, Scalar volumeProportion, Scalar dissolvedProportion, Scalar temperature, Scalar pressure);
-    void AddSolidVolume(Material material, Volume volumePart);
+    void AddLiquidVolume(Liquid liquid, Scalar volumeProportion, Scalar dissolvedProportion, Scalar temperature, Scalar pressure);
+    void AddSolidVolume(Solid solid, Volume volumePart);
 };
 
 

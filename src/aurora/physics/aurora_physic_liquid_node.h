@@ -9,12 +9,12 @@ namespace aurora {
 class LiquidNode
 {
 public:
-    LiquidNode(Material material);
+    LiquidNode(Liquid liquid);
 
     Volume GetVolume() const;
     void SetVolume(Volume volume);
 
-    Material GetMaterial() const;
+    Liquid GetLiquid() const;
     Quantity GetN() const;
     Quantity GetDissolvedN() const;
     Energy GetThermalEnergy() const;
@@ -30,7 +30,7 @@ public:
 private:
 
     // Constants
-    Material m_material;
+    Liquid m_liquid;
     Mm m_altitude;
 
     // Variables

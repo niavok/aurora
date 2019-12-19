@@ -30,9 +30,9 @@ struct MaterialQuantity
 
 struct SolidQuantity
 {
-    SolidQuantity(Material iMaterial, Quantity iN);
+    SolidQuantity(Solid iSolid, Quantity iN);
 
-    Material material;
+    Solid solid;
     Quantity N;
 };
 
@@ -88,12 +88,12 @@ public:
 
     void SetContent(TileContent const& content);
 
-    void AddSolid(Material material, Quantity N, Energy thermalEnergy);
+    void AddSolid(Solid solid, Quantity N, Energy thermalEnergy);
 
-    void AddLiquid(Material material, Quantity N, Quantity dissolvedN, Energy thermalEnergy);
+    void AddLiquid(Liquid liquid, Quantity N, Quantity dissolvedN, Energy thermalEnergy);
 
 
-    void AddGas(Material material, Quantity N, Energy thermalEnergy);
+    void AddGas(Gas gas, Quantity N, Energy thermalEnergy);
 
 
 //    void ClearContent();
