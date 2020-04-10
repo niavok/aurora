@@ -1,8 +1,12 @@
-[gd_scene format=2]
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://gui/FpsLabel.gd" type="Script" id=1]
+[ext_resource path="res://gui/gui_root.gd" type="Script" id=2]
 
 [node name="GuiRoot" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
+script = ExtResource( 2 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -23,11 +27,29 @@ margin_left = 486.0
 margin_right = 538.0
 margin_bottom = 28.0
 
-[node name="PausedStatusLabel" type="Label" parent="TopBar/PanelContainer"]
+[node name="PausedStatusLabel2" type="Label" parent="TopBar/PanelContainer"]
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 45.0
 margin_bottom = 21.0
+size_flags_horizontal = 3
+size_flags_vertical = 7
+text = "Pause"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="TopBar/PanelContainer"]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 45.0
+margin_bottom = 21.0
+
+[node name="PausedStatusLabel" type="Label" parent="TopBar/PanelContainer/HBoxContainer"]
+margin_right = 38.0
+margin_bottom = 14.0
 size_flags_horizontal = 3
 size_flags_vertical = 7
 text = "Pause"
@@ -99,9 +121,10 @@ __meta__ = {
 [node name="RightPanel" type="HBoxContainer" parent="."]
 anchor_left = 1.0
 anchor_right = 1.0
-margin_top = 12.0
-margin_right = -20.0
-margin_bottom = 600.0
+margin_left = -152.681
+margin_top = 12.3406
+margin_right = -20.6812
+margin_bottom = 600.341
 grow_horizontal = 0
 alignment = 2
 __meta__ = {
@@ -144,3 +167,40 @@ text = "Create new level"
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="DebugPannel" type="VBoxContainer" parent="."]
+anchor_left = 0.98
+anchor_top = 0.98
+anchor_right = 0.98
+anchor_bottom = 0.98
+margin_left = -129.0
+margin_top = -40.0
+grow_vertical = 0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="FpsLabel" type="Label" parent="DebugPannel"]
+margin_right = 129.0
+margin_bottom = 14.0
+size_flags_horizontal = 3
+size_flags_vertical = 7
+text = "---- FPS"
+align = 2
+valign = 1
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="WorldRenderStatsLabel" type="Label" parent="DebugPannel"]
+margin_top = 18.0
+margin_right = 129.0
+margin_bottom = 32.0
+text = "World Render: -- ms"
+
+[node name="PhysicStepStatsLabel" type="Label" parent="DebugPannel"]
+margin_top = 36.0
+margin_right = 129.0
+margin_bottom = 50.0
+text = "Physic step: -- ms"

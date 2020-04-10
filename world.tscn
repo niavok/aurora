@@ -43,3 +43,5 @@ script = ExtResource( 7 )
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="GuiRoot" parent="CanvasLayer" instance=ExtResource( 8 )]
+aurora_world_name = "AuroraWorld"
+aurora_world_renderer_name = "AuroraWorldRenderer"
