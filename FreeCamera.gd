@@ -12,9 +12,9 @@ func _ready():
 func _unhandled_input(event):
 	if event is InputEventMouseButton:
 		if event.is_pressed() and event.button_index == BUTTON_WHEEL_DOWN:
-			zoom_out(1)
+			zoom_out(0.01)
 		if event.is_pressed() and event.button_index == BUTTON_WHEEL_UP:
-			zoom_in(1)
+			zoom_in(0.01)
 
 func _physics_process(delta):
 	
@@ -37,23 +37,25 @@ func _physics_process(delta):
 		self.position += deltaPos
 		
 		var zoom_ratio = 1
-		
+
 		if Input.is_action_pressed("zoom_in"):
 			zoom_in(delta)
 		if Input.is_action_pressed("zoom_out"):
 			zoom_out(delta)
 
+var zoom_speed = 0.1
+
 func zoom_in(amount):
 	# TODO: zoom to the cursor
 	# TODO: smooth zoom
-	var zoom_ratio = 1.0/(1.0 + amount)
+	var zoom_ratio = zoom_speed/(zoom_speed + amount)
 	self.zoom *= zoom_ratio
 	if self.zoom.x < 0.5:
 		self.zoom = self.zoom * (0.5 / self.zoom.x) 
 	print("zoom "+String(zoom)+" ratio "+String(zoom))
 
 func zoom_out(amount):
-	var zoom_ratio = 1.0 + amount
+	var zoom_ratio = (zoom_speed + amount) / zoom_speed
 	self.zoom *= zoom_ratio
 	if self.zoom.x > 1000:
 			self.zoom = self.zoom * (1000 / self.zoom.x)
