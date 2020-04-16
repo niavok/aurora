@@ -12,6 +12,8 @@
 [node name="world" type="Node2D"]
 script = ExtResource( 6 )
 
+[node name="AuroraGameManager" type="AuroraGameManager" parent="."]
+
 [node name="AuroraWorld" type="AuroraWorld" parent="."]
 
 [node name="AuroraWorldRenderer" type="AuroraWorldRenderer" parent="."]
@@ -49,3 +51,4 @@ script = ExtResource( 7 )
 aurora_world_path = NodePath("../../AuroraWorld")
 aurora_world_renderer_path = NodePath("../../AuroraWorldRenderer")
 aurora_world_editor_path = NodePath("../../AuroraWorldEditor")
+aurora_game_manager_path = NodePath("../../AuroraGameManager")
