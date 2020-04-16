@@ -22,6 +22,9 @@ __meta__ = {
 "_edit_lock_": true
 }
 
+[node name="AuroraWorldEditor" type="AuroraWorldEditor" parent="."]
+world_node = NodePath("../AuroraWorld")
+
 [node name="test_player" type="KinematicBody2D" parent="."]
 position = Vector2( 2048.08, -409.094 )
 scale = Vector2( 1.3, 1.3 )
@@ -43,5 +46,6 @@ script = ExtResource( 7 )
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="GuiRoot" parent="CanvasLayer" instance=ExtResource( 8 )]
-aurora_world_name = "/root/world/AuroraWorld"
-aurora_world_renderer_name = "/root/world/AuroraWorldRenderer"
+aurora_world_path = NodePath("../../AuroraWorld")
+aurora_world_renderer_path = NodePath("../../AuroraWorldRenderer")
+aurora_world_editor_path = NodePath("../../AuroraWorldEditor")
