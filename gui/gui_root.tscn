@@ -133,7 +133,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="RightPanel" type="PanelContainer" parent="."]
+[node name="EditorPanel" type="PanelContainer" parent="."]
 anchor_left = 1.0
 anchor_right = 1.0
 margin_left = -271.0
@@ -145,7 +145,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="EditorMenu" type="PanelContainer" parent="RightPanel"]
+[node name="EditorMenu" type="PanelContainer" parent="EditorPanel"]
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 294.0
@@ -155,13 +155,13 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="VBoxContainer" type="VBoxContainer" parent="RightPanel/EditorMenu"]
+[node name="VBoxContainer" type="VBoxContainer" parent="EditorPanel/EditorMenu"]
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 280.0
 margin_bottom = 285.0
 
-[node name="WorldEditorMenuLabel" type="Label" parent="RightPanel/EditorMenu/VBoxContainer"]
+[node name="WorldEditorMenuLabel" type="Label" parent="EditorPanel/EditorMenu/VBoxContainer"]
 margin_right = 273.0
 margin_bottom = 14.0
 size_flags_horizontal = 13
@@ -171,7 +171,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="NewLevelButton" type="Button" parent="RightPanel/EditorMenu/VBoxContainer"]
+[node name="NewLevelButton" type="Button" parent="EditorPanel/EditorMenu/VBoxContainer"]
 margin_top = 18.0
 margin_right = 273.0
 margin_bottom = 38.0
@@ -183,19 +183,19 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="HSeparator" type="HSeparator" parent="RightPanel/EditorMenu/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="EditorPanel/EditorMenu/VBoxContainer"]
 margin_top = 42.0
 margin_right = 273.0
 margin_bottom = 46.0
 
-[node name="OptionButton" type="OptionButton" parent="RightPanel/EditorMenu/VBoxContainer"]
+[node name="OptionButton" type="OptionButton" parent="EditorPanel/EditorMenu/VBoxContainer"]
 margin_top = 50.0
 margin_right = 273.0
 margin_bottom = 70.0
 disabled = true
 text = "No active level"
 
-[node name="TabContainer" type="TabContainer" parent="RightPanel/EditorMenu/VBoxContainer"]
+[node name="TabContainer" type="TabContainer" parent="EditorPanel/EditorMenu/VBoxContainer"]
 margin_top = 74.0
 margin_right = 273.0
 margin_bottom = 278.0
@@ -203,7 +203,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Level options" type="VBoxContainer" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer"]
+[node name="Level options" type="VBoxContainer" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 4.0
@@ -211,34 +211,34 @@ margin_top = 32.0
 margin_right = -4.0
 margin_bottom = -4.0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
+[node name="HBoxContainer" type="HBoxContainer" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
 margin_right = 265.0
 margin_bottom = 24.0
 
-[node name="Label" type="Label" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer"]
+[node name="Label" type="Label" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer"]
 margin_top = 5.0
 margin_right = 46.0
 margin_bottom = 19.0
 text = "Name: "
 
-[node name="LineEdit" type="LineEdit" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer"]
+[node name="LineEdit" type="LineEdit" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer"]
 margin_left = 50.0
 margin_right = 265.0
 margin_bottom = 24.0
 size_flags_horizontal = 3
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
 margin_top = 28.0
 margin_right = 265.0
 margin_bottom = 52.0
 
-[node name="Label" type="Label" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer2"]
+[node name="Label" type="Label" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer2"]
 margin_top = 5.0
 margin_right = 61.0
 margin_bottom = 19.0
 text = "Tile size: "
 
-[node name="SpinBox" type="SpinBox" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer2"]
+[node name="SpinBox" type="SpinBox" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer2"]
 margin_left = 65.0
 margin_right = 139.0
 margin_bottom = 24.0
@@ -248,18 +248,18 @@ step = 0.01
 value = 0.01
 suffix = "m"
 
-[node name="HBoxContainer5" type="HBoxContainer" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
+[node name="HBoxContainer5" type="HBoxContainer" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
 margin_top = 56.0
 margin_right = 265.0
 margin_bottom = 80.0
 
-[node name="Label" type="Label" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer5"]
+[node name="Label" type="Label" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer5"]
 margin_top = 5.0
 margin_right = 72.0
 margin_bottom = 19.0
 text = "Tile depth: "
 
-[node name="SpinBox" type="SpinBox" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer5"]
+[node name="SpinBox" type="SpinBox" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer5"]
 margin_left = 76.0
 margin_right = 150.0
 margin_bottom = 24.0
@@ -269,18 +269,18 @@ step = 0.01
 value = 0.01
 suffix = "m"
 
-[node name="HBoxContainer4" type="HBoxContainer" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
+[node name="HBoxContainer4" type="HBoxContainer" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
 margin_top = 84.0
 margin_right = 265.0
 margin_bottom = 108.0
 
-[node name="Label" type="Label" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer4"]
+[node name="Label" type="Label" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer4"]
 margin_top = 5.0
 margin_right = 71.0
 margin_bottom = 19.0
 text = "Tile count: "
 
-[node name="SpinBox" type="SpinBox" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer4"]
+[node name="SpinBox" type="SpinBox" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer4"]
 margin_left = 75.0
 margin_right = 149.0
 margin_bottom = 24.0
@@ -289,14 +289,14 @@ max_value = 10000.0
 value = 1.0
 rounded = true
 
-[node name="Label2" type="Label" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer4"]
+[node name="Label2" type="Label" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer4"]
 margin_left = 153.0
 margin_top = 5.0
 margin_right = 160.0
 margin_bottom = 19.0
 text = "x"
 
-[node name="SpinBox2" type="SpinBox" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer4"]
+[node name="SpinBox2" type="SpinBox" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer4"]
 margin_left = 164.0
 margin_right = 238.0
 margin_bottom = 24.0
@@ -304,18 +304,18 @@ min_value = 1.0
 max_value = 10000.0
 value = 1.0
 
-[node name="HBoxContainer7" type="HBoxContainer" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
+[node name="HBoxContainer7" type="HBoxContainer" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
 margin_top = 112.0
 margin_right = 265.0
 margin_bottom = 136.0
 
-[node name="Label" type="Label" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer7"]
+[node name="Label" type="Label" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer7"]
 margin_top = 5.0
 margin_right = 98.0
 margin_bottom = 19.0
 text = "Level position: "
 
-[node name="SpinBox" type="SpinBox" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer7"]
+[node name="SpinBox" type="SpinBox" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer7"]
 margin_left = 102.0
 margin_right = 176.0
 margin_bottom = 24.0
@@ -324,14 +324,14 @@ max_value = 100000.0
 step = 0.01
 suffix = "m"
 
-[node name="Label2" type="Label" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer7"]
+[node name="Label2" type="Label" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer7"]
 margin_left = 180.0
 margin_top = 5.0
 margin_right = 187.0
 margin_bottom = 19.0
 text = "x"
 
-[node name="SpinBox2" type="SpinBox" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer7"]
+[node name="SpinBox2" type="SpinBox" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer7"]
 margin_left = 191.0
 margin_right = 265.0
 margin_bottom = 24.0
@@ -340,28 +340,28 @@ max_value = 100000.0
 step = 0.01
 suffix = "m"
 
-[node name="HBoxContainer3" type="HBoxContainer" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
+[node name="HBoxContainer3" type="HBoxContainer" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
 margin_top = 140.0
 margin_right = 265.0
 margin_bottom = 140.0
 
-[node name="HBoxContainer6" type="HBoxContainer" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
+[node name="HBoxContainer6" type="HBoxContainer" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options"]
 margin_top = 144.0
 margin_right = 265.0
 margin_bottom = 168.0
 
-[node name="Label" type="Label" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer6"]
+[node name="Label" type="Label" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer6"]
 margin_top = 5.0
 margin_right = 112.0
 margin_bottom = 19.0
 text = "Horizontal loop ? "
 
-[node name="CheckBox" type="CheckBox" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer6"]
+[node name="CheckBox" type="CheckBox" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Level options/HBoxContainer6"]
 margin_left = 116.0
 margin_right = 140.0
 margin_bottom = 24.0
 
-[node name="Tools" type="VBoxContainer" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer"]
+[node name="Tools" type="VBoxContainer" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer"]
 visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -370,12 +370,12 @@ margin_top = 32.0
 margin_right = -4.0
 margin_bottom = -4.0
 
-[node name="Button" type="Button" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Tools"]
+[node name="Button" type="Button" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Tools"]
 margin_right = 213.0
 margin_bottom = 20.0
 text = "Select tile"
 
-[node name="Button2" type="Button" parent="RightPanel/EditorMenu/VBoxContainer/TabContainer/Tools"]
+[node name="Button2" type="Button" parent="EditorPanel/EditorMenu/VBoxContainer/TabContainer/Tools"]
 margin_top = 24.0
 margin_right = 213.0
 margin_bottom = 44.0

@@ -14,18 +14,13 @@ script = ExtResource( 6 )
 
 [node name="AuroraGameManager" type="AuroraGameManager" parent="."]
 
-[node name="AuroraWorld" type="AuroraWorld" parent="."]
-
 [node name="AuroraWorldRenderer" type="AuroraWorldRenderer" parent="."]
-world_node = NodePath("../AuroraWorld")
+game_manager_node = NodePath("../AuroraGameManager")
 texture1 = ExtResource( 1 )
 texture2 = ExtResource( 2 )
 __meta__ = {
 "_edit_lock_": true
 }
-
-[node name="AuroraWorldEditor" type="AuroraWorldEditor" parent="."]
-world_node = NodePath("../AuroraWorld")
 
 [node name="test_player" type="KinematicBody2D" parent="."]
 position = Vector2( 2048.08, -409.094 )
@@ -48,7 +43,5 @@ script = ExtResource( 7 )
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="GuiRoot" parent="CanvasLayer" instance=ExtResource( 8 )]
-aurora_world_path = NodePath("../../AuroraWorld")
 aurora_world_renderer_path = NodePath("../../AuroraWorldRenderer")
-aurora_world_editor_path = NodePath("../../AuroraWorldEditor")
 aurora_game_manager_path = NodePath("../../AuroraGameManager")
